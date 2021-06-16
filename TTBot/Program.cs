@@ -121,10 +121,10 @@ namespace TTBot
             }
 
 
-            if (channel is SocketTextChannel textChannel)
+         /*   if (channel is SocketTextChannel textChannel)
             {
                 await textChannel.Guild.Owner.SendMessageAsync($"{nickName} signed out of {@event.Name}");
-            }
+            }*/
 
             await eventSignups.DeleteAsync(existingSignup);
             await eventParticipantSets.UpdatePinnedMessageForEvent(channel, @event, message);
@@ -222,10 +222,10 @@ namespace TTBot
             await eventSignups.AddUserToEvent(@event, reaction.User.Value);
             await eventParticipantSets.UpdatePinnedMessageForEvent(channel, @event, message);
 
-            if (channel is SocketTextChannel textChannel)
+           /* if (channel is SocketTextChannel textChannel)
             {
                 await textChannel.Guild.Owner.SendMessageAsync($"{nickName} signed up to {@event.Name}");
-            }
+            }*/
 
             await NotifyUser(reaction, $"Thanks! You've been signed up to {@event.Name}. " +
                 $"If you can no longer attend just remove your reaction from the signup message!");
