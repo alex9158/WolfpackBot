@@ -173,6 +173,21 @@ namespace TTBot
                 return;
             }
 
+
+            if (reaction.User.Value is IGuildUser user) {
+                var moderatorService = _serviceProvider.GetRequiredService<IModerator>();
+                var moderators = await moderatorService.GetLeaderboardModeratorsAsync(user.GuildId);
+                if ((user.GuildPermissions.ManageGuild || moderators.Exists(m => user.RoleIds.Any(r => r.ToString() == m.RoleId)))
+                    && reaction.Emote.Name == "❌")
+                {
+                    var eventParticipantService = _serviceProvider.GetRequiredService<IEventParticipantService>();
+                    await eventParticipantService.UnpinEventMessage(channel, @event);
+                    @event.Closed = true;
+                    await events.SaveAsync(@event);
+                    await channel.SendMessageAsync($"{@event.Name} is now closed!");
+                }
+            }
+
             var existingSignup = await eventSignups.GetSignupAsync(@event, reaction.User.Value);
 
             if (existingSignup != null)
