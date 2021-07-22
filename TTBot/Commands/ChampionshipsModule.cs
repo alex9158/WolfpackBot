@@ -550,7 +550,7 @@ namespace TTBot.Commands
                         }
                         sb.Append("***");
                         sb.Append(allActiveEvents.Where<Event>
-                            (e => (ulong)e.Id == em.EventId).Select(e => e.ShortName).FirstOrDefault());
+                            (e => (ulong)e.Id == em.EventId).Select(e => e.Name).FirstOrDefault());
                         sb.Append("***");
                         sb.Append(": ");
                     }
@@ -669,7 +669,7 @@ namespace TTBot.Commands
                         }
                         sb.Append("***");
                         sb.Append(allActiveEvents.Where<Event>
-                            (e => (ulong)e.Id == w.EventId).Select(e => e.ShortName).FirstOrDefault());
+                            (e => (ulong)e.Id == w.EventId).Select(e => e.Name).FirstOrDefault());
                         sb.Append("***");
                         sb.Append(": ");
                     }
