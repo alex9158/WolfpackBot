@@ -255,7 +255,7 @@ namespace TTBot.Commands
                 }
                 else
                 {
-                    var championship = e.ShortName;
+                    var championship = Regex.Replace(e.Name, "championship", "", RegexOptions.IgnoreCase);
                     var results = await _results.GetChampionshipResultsByIdAsync(eventId);
                     if (results.Count == 0)
                     {
