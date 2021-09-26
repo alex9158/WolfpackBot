@@ -317,7 +317,7 @@ namespace TTBot
                 .AddEnvironmentVariables("TTBot_")
                 .AddCommandLine(args);
 
-            services.AddSingleton<IConfiguration>(this._configuration = builder.Build());
+            services.AddSingleton(this._configuration = builder.Build());
 
             Console.WriteLine("Token: " + _configuration.GetValue<string>("Token"));
 
@@ -338,6 +338,7 @@ namespace TTBot
             services.AddScoped<IExcelWrapper, ExcelWrapper>();
             services.AddScoped<IEventAliasMapping, EventAliasMapping>();
             services.AddScoped<IExcelSheetEventMapping, ExcelSheetEventMapping>();
+            services.AddScoped<ITwitterIntegrationService, TwitterIntegrationService>();
             services.AddSingleton(_client);
         }
 
