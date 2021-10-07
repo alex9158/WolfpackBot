@@ -1,4 +1,5 @@
 ﻿using Discord;
+using NodaTime;
 using OfficeOpenXml;
 using System;
 using System.Collections.Generic;
@@ -41,7 +42,9 @@ namespace TTBot.Services
                     int rowCount = worksheet.Dimension.End.Row;
                     int colCount = worksheet.Dimension.End.Column;
                     int maxRound = 0;
-                    string lastTrack = "", lastDate = "";
+                    string lastTrack = "", lastDate = "", nextTrack = "";
+                    DateTime nextDate = new DateTime();
+                    var hasData = false;
 
                     for (int c = 1; c < colCount; c++)
                     {
@@ -49,6 +52,11 @@ namespace TTBot.Services
                         while (!worksheet.Cells[1, c].Text.ToLower().Contains("round") && c < colCount)
                         {
                             c++;
+                            if (c == colCount && hasData)
+                            {
+                                nextTrack = "";
+                                nextDate = new DateTime();
+                            }
                         }
 
                         if (worksheet.Cells[1, c].Text.ToLower().Contains("round")) {
@@ -60,16 +68,24 @@ namespace TTBot.Services
                             {
                                 var row = r + 5;
 
+                                if (hasData)
+                                {
+                                    nextDate = dateBeingRead;
+                                    nextTrack = trackBeingRead;
+                                    hasData = false;
+                                }
+
                                 if (!string.IsNullOrWhiteSpace(worksheet.Cells[row, c].Text) &&
                                     int.Parse(worksheet.Cells[row, c].Text) > 0) {
                                     maxRound = int.Parse(roundBeingRead);
-                                    lastDate = dateBeingRead.ToString("dd/MM/yyyy"); ;
+                                    lastDate = dateBeingRead.ToString("dd/MM/yyyy");
 
                                     var lastTrackArray = trackBeingRead.Split();
                                     lastTrack = lastTrackArray[0] + " " +
                                         (lastTrackArray.Length > 1 ? lastTrackArray[1] : "");
 
                                     c++; // skip this column, so we can start looking for the next col
+                                    hasData = true;
                                     break;
                                 }
                             }
@@ -81,7 +97,9 @@ namespace TTBot.Services
                         Championship = eventShortname,
                         Round = maxRound,
                         LastRoundDate = lastDate,
-                        LastRoundTrack = lastTrack
+                        LastRoundTrack = lastTrack,
+                        NextRoundDate = nextDate,
+                        NextRoundTrack = nextTrack
                     });
                 }
             }

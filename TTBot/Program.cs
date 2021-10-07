@@ -17,6 +17,8 @@ using TTBot.Models;
 using ServiceStack.Data;
 using System.Collections.Generic;
 using ServiceStack.Model;
+using ServiceStack;
+using TTBot.Exceptions;
 
 namespace TTBot
 {
@@ -317,9 +319,17 @@ namespace TTBot
                 .AddEnvironmentVariables("TTBot_")
                 .AddCommandLine(args);
 
-            services.AddSingleton<IConfiguration>(this._configuration = builder.Build());
+            services.AddSingleton(this._configuration = builder.Build());
 
             Console.WriteLine("Token: " + _configuration.GetValue<string>("Token"));
+
+            if (_configuration.GetValue<string>("CONSUMER_KEY").IsNullOrEmpty() ||
+                _configuration.GetValue<string>("CONSUMER_SECRET").IsNullOrEmpty() ||
+                _configuration.GetValue<string>("ACCESS_KEY").IsNullOrEmpty() ||
+                _configuration.GetValue<string>("ACCESS_SECRET").IsNullOrEmpty())
+            {
+                throw new InvalidConfigException();
+            }
 
             services.AddScoped<IModerator, Moderator>();
             services.AddScoped<ILeaderboards, Leaderboards>();
@@ -338,6 +348,7 @@ namespace TTBot
             services.AddScoped<IExcelWrapper, ExcelWrapper>();
             services.AddScoped<IEventAliasMapping, EventAliasMapping>();
             services.AddScoped<IExcelSheetEventMapping, ExcelSheetEventMapping>();
+            services.AddScoped<ITwitterIntegrationService, TwitterIntegrationService>();
             services.AddSingleton(_client);
         }
 
