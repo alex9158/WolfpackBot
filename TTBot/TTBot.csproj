@@ -6,13 +6,9 @@
 		<CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-	  <WarningLevel>5</WarningLevel>
-	</PropertyGroup>
-
 	<ItemGroup>
 		<PackageReference Include="Dapper" Version="2.0.35" />
-		<PackageReference Include="Discord.Net" Version="2.3.0-dev-20201028.4" />
+		<PackageReference Include="Discord.Net" Version="2.4.0" />
 		<PackageReference Include="EPPlus" Version="5.4.2" />
 		<PackageReference Include="Microsoft.Data.Sqlite" Version="3.1.9" />
 		<PackageReference Include="Microsoft.Extensions.Configuration" Version="3.1.9" />
@@ -28,6 +24,9 @@
 		<PackageReference Include="TweetinviAPI" Version="5.0.4" />
 
 		<Content Include="Assets/StandingsTemplate.png">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+		<Content Include="Assets/TimeTrialStandingsTemplate.png">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
 		<Content Include="Assets/Fonts/Formula1-Regular.otf">
