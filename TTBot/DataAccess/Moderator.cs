@@ -50,7 +50,7 @@ namespace TTBot.DataAccess
                   "FROM LeaderboardModerators " +
                   "where guildId = @guildId and roleId =@roleId", new { guildId = guildId.ToString(), roleId = roleId.ToString() });
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     throw;
                 }
