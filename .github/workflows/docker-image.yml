@@ -23,7 +23,7 @@ jobs:
           tags: alex9158/ttbot:latest
       -
         name: Install SSH Key
-        uses: shimatoro/ssh-key-action@v2
+        uses: shimataro/ssh-key-action@v2
         with:
           known_hosts: ${{ secrets.AZURE_SSH_KNOWN_HOSTS }}
           key: ${{ secrets.AZURE_SSH_PRIVATE_KEY }}
