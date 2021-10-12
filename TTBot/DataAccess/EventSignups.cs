@@ -23,7 +23,7 @@ namespace TTBot.DataAccess
         {
             using (var con = _dbConnectionFactory.Open())
             {
-                con.Save(eventSignUp);
+                await con.SaveAsync(eventSignUp);
             }
         }
 

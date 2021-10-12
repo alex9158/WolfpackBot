@@ -319,9 +319,7 @@ namespace TTBot
                 .AddEnvironmentVariables("TTBot_")
                 .AddCommandLine(args);
 
-            services.AddSingleton(this._configuration = builder.Build());
-
-            Console.WriteLine("Token: " + _configuration.GetValue<string>("Token"));
+            services.AddSingleton(this._configuration = builder.Build());         
 
             if (_configuration.GetValue<string>("CONSUMER_KEY").IsNullOrEmpty() ||
                 _configuration.GetValue<string>("CONSUMER_SECRET").IsNullOrEmpty() ||

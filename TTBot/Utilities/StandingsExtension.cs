@@ -11,6 +11,7 @@ using System.Text;
 using System.Threading.Tasks;
 using TTBot.DataAccess;
 using TTBot.Models;
+using TTBot.Extensions;
 
 namespace TTBot.Utilities
 {
@@ -259,7 +260,7 @@ namespace TTBot.Utilities
                     */
 
                     var userId = Convert.ToUInt64(item.value.SubmittedById);
-                    var user = context.Guild.GetUser(userId).Username;
+                    var user = context.Guild.GetUser(userId).GetDisplayName();
 
                     graphics.DrawString(
                         user,
