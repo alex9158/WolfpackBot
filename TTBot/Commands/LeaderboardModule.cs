@@ -5,28 +5,34 @@ using Microsoft.Extensions.Primitives;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Transactions;
 using TTBot.DataAccess;
+using TTBot.Models;
 using TTBot.Services;
+using TTBot.Utilities;
 
 namespace TTBot.Commands
 {
     [Group("leaderboard")]
+    [Alias("l")]
     public class LeaderboardModule : ModuleBase<SocketCommandContext>
     {
         private readonly ILeaderboards _leaderboards;
         private readonly ILeaderboardEntries _leaderboardEntries;
         private readonly IPermissionService _permissionService;
+        private readonly IEvents _events;
 
-        public LeaderboardModule(ILeaderboards leaderboards, ILeaderboardEntries leaderboardEntries, IPermissionService permissionService)
+        public LeaderboardModule(ILeaderboards leaderboards, ILeaderboardEntries leaderboardEntries, IPermissionService permissionService, IEvents events)
         {
             _leaderboards = leaderboards;
             _leaderboardEntries = leaderboardEntries;
             _permissionService = permissionService;
+            _events = events;
         }
 
 
@@ -174,34 +180,21 @@ namespace TTBot.Commands
                 await Context.Channel.SendMessageAsync($"No times posted yet!");
                 return;
             }
-            StringBuilder standingsMessageBuilder = new StringBuilder();
-            standingsMessageBuilder.AppendLine($"**{leaderboard.Description} Standings**");
-            for (int i = 0; i < standings.Count; i++)
+
+            var image = StandingsExtension.BuildImage(Context, leaderboard, standings);
+
+            using (MemoryStream memoryStream = new MemoryStream())
             {
-                var entry = standings[i];
-                var userId = Convert.ToUInt64(entry.SubmittedById);
-                var user = Context.Guild.GetUser(userId);
 
-                string name;
-                if (user == null)
-                {
-                    name = "Unknown user";
-                }
-                else
-                {
-                    name = string.IsNullOrEmpty(user.Nickname) ? user.Username : user.Nickname;
-                }
-                var message = $"{i + 1} - {name} - {entry.Time.ToString(@"mm\:ss\.fff")}";
+                image.Save(memoryStream, System.Drawing.Imaging.ImageFormat.Png);
 
-                if (!string.IsNullOrEmpty(parameters))
-                {
-                    message += $" <{entry.ProofUrl}>";
-                }
+                memoryStream.Position = 0;
 
-                standingsMessageBuilder.AppendLine(message);
+                await Context.Channel.SendFileAsync
+                    (memoryStream, $"{leaderboard.Description}-standings-{DateTime.Now.ToString("yyyy-dd-M-HH-mm-ss")}.png");
+
 
             }
-            await Context.Channel.SendMessageAsync(standingsMessageBuilder.ToString());
         }
 
         [Command("invalidate", ignoreExtraArgs: true)]
