@@ -20,5 +20,5 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           push: true
-          tags: alex9158@ttbot:latest
+          tags: alex9158/ttbot:latest
       
