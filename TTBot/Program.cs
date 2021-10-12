@@ -17,6 +17,8 @@ using TTBot.Models;
 using ServiceStack.Data;
 using System.Collections.Generic;
 using ServiceStack.Model;
+using ServiceStack;
+using TTBot.Exceptions;
 
 namespace TTBot
 {
@@ -42,7 +44,7 @@ namespace TTBot
         private async Task MainAsync(string[] args)
         {
             var services = new ServiceCollection();
-     
+
             InitServices(services, args);
             CreateDataDirectory();
             InitDapperTypeHandlers();
@@ -114,23 +116,37 @@ namespace TTBot
                         await guildUser.RemoveRoleAsync(role);
                     }
                     catch (Discord.Net.HttpException) { /* ignore forbidden exception */ }
-                    
+
                 }
 
                 nickName = string.IsNullOrEmpty(guildUser.Nickname) ? nickName : guildUser.Nickname;
             }
 
 
-            if (channel is SocketTextChannel textChannel)
+         /*   if (channel is SocketTextChannel textChannel)
             {
                 await textChannel.Guild.Owner.SendMessageAsync($"{nickName} signed out of {@event.Name}");
-            }
+            }*/
 
             await eventSignups.DeleteAsync(existingSignup);
             await eventParticipantSets.UpdatePinnedMessageForEvent(channel, @event, message);
-            await reaction.User.Value.SendMessageAsync($"Thanks! You've been removed from {@event.Name}.");
-
+            await NotifyUser(reaction, $"Thanks! You've been removed from {@event.Name}.");
         }
+
+        private async Task NotifyUser(SocketReaction reaction, string message)
+        {
+            try
+            {
+                await reaction.User.Value.SendMessageAsync(message);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Unable to send message '{message}' " +
+                    $"to user '{reaction.User.Value.Username}' " +
+                    $"Error: '{ex.Message}'");
+            }
+        }
+
         private async Task OnReactionAdd(Cacheable<IUserMessage, ulong> cacheableMessage, ISocketMessageChannel channel, SocketReaction reaction)
         {
             var eventSignups = _serviceProvider.GetRequiredService<IEventSignups>();
@@ -140,7 +156,7 @@ namespace TTBot
 
             async Task CancelSignup(string reason)
             {
-                await reaction.User.Value.SendMessageAsync(reason);
+                await NotifyUser(reaction, reason);
                 await message.RemoveReactionAsync(reaction.Emote, reaction.User.Value);
                 return;
             }
@@ -157,6 +173,21 @@ namespace TTBot
             if (@event == null || @event.Closed)
             {
                 return;
+            }
+
+
+            if (reaction.User.Value is IGuildUser user) {
+                var moderatorService = _serviceProvider.GetRequiredService<IModerator>();
+                var moderators = await moderatorService.GetLeaderboardModeratorsAsync(user.GuildId);
+                if ((user.GuildPermissions.ManageGuild || moderators.Exists(m => user.RoleIds.Any(r => r.ToString() == m.RoleId)))
+                    && reaction.Emote.Name == "❌")
+                {
+                    var eventParticipantService = _serviceProvider.GetRequiredService<IEventParticipantService>();
+                    await eventParticipantService.UnpinEventMessage(channel, @event);
+                    @event.Closed = true;
+                    await events.SaveAsync(@event);
+                    await channel.SendMessageAsync($"{@event.Name} is now closed!");
+                }
             }
 
             var existingSignup = await eventSignups.GetSignupAsync(@event, reaction.User.Value);
@@ -189,7 +220,7 @@ namespace TTBot
 
             var nickName = reaction.User.Value.Username;
 
-            if(reaction.User.Value is IGuildUser guildUser)
+            if (reaction.User.Value is IGuildUser guildUser)
             {
                 var role = guildUser.Guild.Roles.FirstOrDefault(x => x.Id.ToString() == @event.RoleId);
                 if (role != null)
@@ -199,7 +230,7 @@ namespace TTBot
                         await guildUser.AddRoleAsync(role);
                     }
                     catch (Discord.Net.HttpException) { /* ignore forbidden exception */ }
-                        
+
                 }
 
                 nickName = string.IsNullOrEmpty(guildUser.Nickname) ? nickName : guildUser.Nickname;
@@ -208,14 +239,13 @@ namespace TTBot
             await eventSignups.AddUserToEvent(@event, reaction.User.Value);
             await eventParticipantSets.UpdatePinnedMessageForEvent(channel, @event, message);
 
-            
-
-            if(channel is SocketTextChannel textChannel)
+           /* if (channel is SocketTextChannel textChannel)
             {
                 await textChannel.Guild.Owner.SendMessageAsync($"{nickName} signed up to {@event.Name}");
-            }
+            }*/
 
-            await reaction.User.Value.SendMessageAsync($"Thanks! You've been signed up to {@event.Name}. If you can no longer attend just remove your reaction from the signup message!");
+            await NotifyUser(reaction, $"Thanks! You've been signed up to {@event.Name}. " +
+                $"If you can no longer attend just remove your reaction from the signup message!");
         }
 
         private async Task OnReactionChange(Cacheable<IUserMessage, ulong> cacheableMessage, ISocketMessageChannel channel, SocketReaction _)
@@ -289,9 +319,17 @@ namespace TTBot
                 .AddEnvironmentVariables("TTBot_")
                 .AddCommandLine(args);
 
-            services.AddSingleton<IConfiguration>(this._configuration = builder.Build());
+            services.AddSingleton(this._configuration = builder.Build());
 
             Console.WriteLine("Token: " + _configuration.GetValue<string>("Token"));
+
+            if (_configuration.GetValue<string>("CONSUMER_KEY").IsNullOrEmpty() ||
+                _configuration.GetValue<string>("CONSUMER_SECRET").IsNullOrEmpty() ||
+                _configuration.GetValue<string>("ACCESS_KEY").IsNullOrEmpty() ||
+                _configuration.GetValue<string>("ACCESS_SECRET").IsNullOrEmpty())
+            {
+                throw new InvalidConfigException();
+            }
 
             services.AddScoped<IModerator, Moderator>();
             services.AddScoped<ILeaderboards, Leaderboards>();
@@ -310,6 +348,7 @@ namespace TTBot
             services.AddScoped<IExcelWrapper, ExcelWrapper>();
             services.AddScoped<IEventAliasMapping, EventAliasMapping>();
             services.AddScoped<IExcelSheetEventMapping, ExcelSheetEventMapping>();
+            services.AddScoped<ITwitterIntegrationService, TwitterIntegrationService>();
             services.AddSingleton(_client);
         }
 

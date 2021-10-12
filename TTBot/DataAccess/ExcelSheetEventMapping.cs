@@ -45,14 +45,14 @@ namespace TTBot.DataAccess
         {
             using (var connection = _conFactory.Open())
             {
-                var mapping = await connection.SingleAsync<ExcelSheetEventMappingModel>
-                    (em => em.Sheetname == sheet && em.IsRoundsSheet == isRoundsSheet);
-                if (mapping == null)
+                var eventIds = (await connection.SelectAsync<ExcelSheetEventMappingModel>
+                    (em => em.Sheetname == sheet && em.IsRoundsSheet == isRoundsSheet)).Select(m => m.EventId).ToList();
+                if (eventIds.Count == 0)
                 {
                     return null;
                 }
 
-                var e = await connection.SingleAsync<Event>(e => e.Id == Convert.ToInt32(mapping.EventId));
+                var e = await connection.SingleAsync<Event>(e => eventIds.Contains((ulong)e.Id) && e.Closed == false);
 
                 return e.ShortName;
             }

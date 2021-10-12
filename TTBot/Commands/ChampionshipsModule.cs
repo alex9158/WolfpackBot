@@ -1,6 +1,7 @@
 ﻿using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using NodaTime;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -27,6 +28,7 @@ namespace TTBot.Commands
         private readonly IEvents _events;
         private readonly IEventAliasMapping _eventAliasMapping;
         private readonly IExcelSheetEventMapping _excelSheetEventMapping;
+        private readonly ITwitterIntegrationService _twitterIntegrationService;
 
         public ChampionshipsModule(
             IChampionshipResults results,
@@ -34,7 +36,8 @@ namespace TTBot.Commands
             IExcelService excelService,
             IEvents events,
             IEventAliasMapping eventAliasMapping,
-            IExcelSheetEventMapping excelSheetEventMapping)
+            IExcelSheetEventMapping excelSheetEventMapping,
+            ITwitterIntegrationService twitterIntegrationService)
         {
             _results = results ?? throw new ArgumentNullException(nameof(results));
             _permissionService = permissionService ?? throw new ArgumentNullException(nameof(permissionService));
@@ -42,7 +45,9 @@ namespace TTBot.Commands
             _events = events ?? throw new ArgumentNullException(nameof(events));
             _eventAliasMapping = eventAliasMapping ?? throw new ArgumentNullException(nameof(eventAliasMapping));
             _excelSheetEventMapping = excelSheetEventMapping ?? throw new ArgumentNullException(nameof(excelSheetEventMapping));
+            _twitterIntegrationService = twitterIntegrationService ?? throw new ArgumentNullException(nameof(twitterIntegrationService));
         }
+    
 
         [Command("import")]
         public async Task Standings()
@@ -128,6 +133,8 @@ namespace TTBot.Commands
                     e.Round = c.Round;
                     e.LastRoundTrack = c.LastRoundTrack;
                     e.LastRoundDate = c.LastRoundDate;
+                    e.NextRoundTrack = c.NextRoundTrack;
+                    e.NextRoundDate = c.NextRoundDate;
                     await _events.SaveAsync(e);
                 }
 
@@ -148,18 +155,98 @@ namespace TTBot.Commands
                 sb.AppendLine($"The following championship shortnames were not found in events: {string.Join(", ", listOfUnknownChampionships)}");
             }
 
+            await postStandings();
             await ReplyAsync(sb.ToString());
+        }
 
-            var standingsChannelId = Context.Guild.Channels.First(c => c.Name.Contains("standings-wpr")).Id;
-            var channel = Context.Guild.GetChannel(standingsChannelId) as IMessageChannel;
-            await channel.SendMessageAsync(":medal:Standings have just been updated.");
+        [Command("tweet")]
+        [Alias("t")]
+        public async Task TweetStandings()
+        {
+            await postStandings(false);
+        }
+
+        [Command("twitter")]
+        public async Task Twitter(string action = null, string eventShortName = null, string message = null)
+        {
+            var author = Context.Message.Author as SocketGuildUser;
+            if (!await _permissionService.UserIsModeratorAsync(Context, author))
+            {
+                await Context.Channel.SendMessageAsync("You dont have permission to create aliases");
+                return;
+            }
+            var sb = new StringBuilder();
+            if (action == null)
+            {
+                sb.AppendLine("Action missing");
+                await ReplyAsync(sb.ToString());
+                return;
+            }
+
+            var guildId = Context.Guild.Id;
+
+            if (action == "add" ||action == "remove")
+            {
+                if (eventShortName == null || message == null)
+                {
+                    sb.AppendLine("Details missing for the add");
+                    await ReplyAsync(sb.ToString());
+                    return;
+                }
+                var e = await _events.GetActiveEvent(eventShortName, guildId);
+                if (e == null)
+                {
+                    sb.AppendLine($"Unknown event with shortname {eventShortName}");
+                    await ReplyAsync(sb.ToString());
+                    return;
+                }
+
+                if (action == "add")
+                {
+                    e.TwitterMessage = message;
+                    sb.AppendLine($"Twitter messaged added to {e.Name}");
+                } else if (action == "remove")
+                {
+                    e.TwitterMessage = "";
+                    sb.AppendLine($"Twitter messaged deleted for {e.Name}");
+                }
+
+                await _events.SaveAsync(e);
+
+            }
+            else if (action == "list")
+            {
+                var allActiveEvents = await _events.GetActiveEvents(guildId);
+
+                foreach (var e in allActiveEvents)
+                {
+                    if (e.TwitterMessage == "" || e.TwitterMessage == null)
+                    {
+                        continue;
+                    }
+
+                    sb.Append("***");
+                    sb.Append(e.Name);
+                    sb.Append("***");
+                    sb.Append(": \"");
+                    sb.Append(e.TwitterMessage);
+                    sb.Append(": \"");
+                    sb.AppendLine();
+                }
+                    
+            }
+            else
+            {
+                sb.AppendLine("Incorrect action - must be either add, remove or list");
+            }
+
+            await ReplyAsync(sb.ToString());
         }
 
         [Command("list")]
         [Alias("l")]
         public async Task GetChampionships()
         {
-
             var sb = new StringBuilder();
 
             try
@@ -189,47 +276,25 @@ namespace TTBot.Commands
             await ReplyAsync(sb.ToString());
         }
 
-        [Command("standings")]
-        [Alias("s")]
-        public async Task GetStandings([Remainder] string args = null)
+        private async Task postStandings(bool toDiscord = true)
         {
             var guildId = Context.Guild.Id;
-            var sb = new StringBuilder();
 
-            if (args == null)
+            var championships = await _events.GetActiveEvents(guildId);
+            foreach (var c in championships)
             {
-                sb.AppendLine("No championship provided");
-                await ReplyAsync(sb.ToString());
-                return;
+                var alias = c.ShortName ?? c.Name;
+                await writeStandingsForChampionship(alias, guildId, toDiscord);
             }
-            else if (args == "all")
-            {
-                var author = Context.Message.Author as SocketGuildUser;
-                if (!await _permissionService.UserIsModeratorAsync(Context, author))
-                {
-                    await Context.Channel.SendMessageAsync("You dont have permission to display all standings");
-                    return;
-                }
 
-                var championships = await _events.GetActiveEvents(guildId);
-                foreach (var c in championships)
-                {
-                    await writeStandingsForChampionship(c.ShortName, guildId);
-                }
-            }
-            else
-            {
-                await writeStandingsForChampionship(args, guildId);
-            }
         }
 
-        private async Task writeStandingsForChampionship(string alias, ulong guildId)
+        private async Task writeStandingsForChampionship(string alias, ulong guildId, bool toDiscord)
         {
-
             var sb = new StringBuilder();
             try
             {
-                var aliasEvent = await _eventAliasMapping.GetActiveEventFromAliasAsync(alias);
+                var aliasEvent = await _eventAliasMapping.GetActiveEventFromAliasAsync(alias, guildId);
                 var activeEvent = await _events.GetActiveEvent(alias, guildId);
                 if (aliasEvent == null && activeEvent == null)
                 {
@@ -238,169 +303,67 @@ namespace TTBot.Commands
                     return;
                 }
 
-                var eventId = activeEvent != null ? activeEvent.Id : aliasEvent.Id;
+                var eventId = aliasEvent != null ? aliasEvent.Id : activeEvent.Id;
 
                 var e = await _events.GetActiveEvent(eventId);
                 if (e == null || e.Id == 0)
                 {
                     sb.AppendLine($"Championship {eventId} not found");
                     await ReplyAsync(sb.ToString());
-                    return;
                 }
                 else
                 {
-                    var championship = e.ShortName;
+                    var championship = Regex.Replace(e.Name, "championship", "", RegexOptions.IgnoreCase);
                     var results = await _results.GetChampionshipResultsByIdAsync(eventId);
                     if (results.Count == 0)
                     {
                         return;
                     }
 
-                    var orderedResults = results.OrderBy(r => r.Pos);
+                    var image = StandingsExtension.BuildImage(e, results);
 
-                    int posXStart = Utilities.OperatingSystem.IsWindows() ? 100 : 110;
-                    int posYStart = 375;
-                    int championshipX = Utilities.OperatingSystem.IsWindows() ? 245 : 252;
-                    int championshipY = Utilities.OperatingSystem.IsWindows() ? 220 : 225;
-                    int roundX = 660;
-                    int roundY = 120;
-
-                    var driverX = posXStart + 100;
-                    var numberX = driverX + 400;
-                    int pointsX = numberX + 110;
-                    int diffX = pointsX + 155;
-
-                    int lastRowY = 0;
-
-                    string templateFilePath = @"Assets/StandingsTemplate.png";
-                    using (Bitmap image = (Bitmap)System.Drawing.Image.FromFile(templateFilePath))
-                    using (Graphics graphics = Graphics.FromImage(image))
+                    if (toDiscord)
                     {
-                        PrivateFontCollection fontCol = new PrivateFontCollection();
-                        fontCol.AddFontFile(@"Assets/Fonts/Formula1-Regular.otf");
-                        var formula1FontFamily = fontCol.Families[0];
-
-                        Font font, numberFont, longDriverFont, largerFont;
-                        if (Utilities.OperatingSystem.IsWindows())
-                        {
-                            font = new Font(formula1FontFamily, 8);
-                            numberFont = new Font(formula1FontFamily, 7);
-                            longDriverFont = new Font(formula1FontFamily, 5);
-                            largerFont = new Font(formula1FontFamily, 10);
-                        }
-                        else
-                        {
-                            font = new Font(formula1FontFamily.Name, 24);
-                            numberFont = new Font(formula1FontFamily.Name, 20);
-                            longDriverFont = new Font(formula1FontFamily.Name, 18);
-                            largerFont = new Font(formula1FontFamily.Name, 28);
-                        }
-
-                        // write championship
-                        var championshipXMax = 370;
-                        var championshipYMax = Utilities.OperatingSystem.IsWindows() ? 60 : 50;
-
-                        // For testing - uncomment to show rectangles
-                        /* Rectangle rect1 = new Rectangle(championshipX, championshipY, championshipXMax, championshipYMax);
-                        graphics.FillRectangle(
-                            new SolidBrush(System.Drawing.Color.FromArgb(0, 0, 0)), rect1);
-                        */
-
-                        Size championshipSize = new Size(championshipXMax, championshipYMax);
-                        graphics.DrawString(
-                            championship,
-                            graphics.GetAdjustedFont(championship, largerFont, championshipSize),
-                            new SolidBrush(System.Drawing.Color.FromArgb(213, 213, 213)),
-                            championshipX,
-                            championshipY);
-
-                        // write round details (if available)
-                        if (e.Round != null && e.Round > 0)
-                        {
-                            graphics.DrawString(
-                                $"Round {e.Round}",
-                                largerFont,
-                                new SolidBrush(System.Drawing.Color.FromArgb(213, 213, 213)),
-                                roundX,
-                                roundY);
-
-                            graphics.DrawString(
-                                e.LastRoundDate,
-                                largerFont,
-                                new SolidBrush(System.Drawing.Color.FromArgb(213, 213, 213)),
-                                roundX,
-                                roundY + 50);
-
-                            var trackXMax = 310;
-                            var trackYMax = Utilities.OperatingSystem.IsWindows() ? 60 : 40;
-                            Size trackSize = new Size(trackXMax, trackYMax);
-
-                            // For testing - uncomment to show rectangles
-                            /*
-                            Rectangle rect2 = new Rectangle(roundX, roundY + 100, trackXMax, trackYMax);
-                            graphics.FillRectangle(
-                                new SolidBrush(System.Drawing.Color.FromArgb(0, 0, 0)), rect2);
-                            */
-
-                            graphics.DrawString(
-                                e.LastRoundTrack,
-                                graphics.GetAdjustedFont(e.LastRoundTrack, largerFont, trackSize),
-                                new SolidBrush(System.Drawing.Color.FromArgb(213, 213, 213)),
-                                roundX,
-                                roundY + 100);
-                        }
-
-                        int y = Utilities.OperatingSystem.IsWindows() ? posYStart - 1 : posYStart - 4;
-                        foreach (ChampionshipResultsModel r in orderedResults)
-                        {
-                            graphics.FillRoundedRectangle(
-                                Brushes.White,
-                                Utilities.OperatingSystem.IsWindows() ? posXStart + 7 : posXStart + 1,
-                                Utilities.OperatingSystem.IsWindows() ? y - 3 : y - 5,
-                                50,
-                                40,
-                                4);
-
-                            var posX = r.Pos <= 9
-                                ? posXStart + 15
-                                : posXStart + 5;
-
-                            graphics.DrawString(r.Pos.ToString(), numberFont, Brushes.Black, posX, y);
-                            graphics.DrawString(
-                                r.Driver,
-                                r.Driver.Length <= 25 ? font : longDriverFont,
-                                Brushes.White,
-                                driverX,
-                                    r.Driver.Length <= 25 ? y : y + 6);
-                            graphics.DrawString(r.Number, font, Brushes.White, numberX, y);
-                            graphics.DrawString(r.Points, font, Brushes.White, pointsX, y);
-                            graphics.DrawString(r.Diff, font, Brushes.White, diffX, y);
-
-                            lastRowY = y;
-
-                            y += 50;
-                        }
-
                         using (MemoryStream memoryStream = new MemoryStream())
                         {
-                            if (lastRowY + 75 < image.Height)
+
+                            image.Save(memoryStream, System.Drawing.Imaging.ImageFormat.Png);
+
+                            var signUpChannelId = Convert.ToUInt64(e.ChannelId);
+                            var channel = Context.Guild.GetChannel(signUpChannelId) as IMessageChannel;
+                            if (channel == null)
                             {
-                                var imageCropRect = new Rectangle(0, 0, image.Width, lastRowY + 75);
-                                image.Clone(imageCropRect, System.Drawing.Imaging.PixelFormat.Format32bppArgb)
-                                    .Save(memoryStream, System.Drawing.Imaging.ImageFormat.Png);
+                                sb.AppendLine($"No sign-up channel found for event {e.ShortName} to post standings to");
+                                await ReplyAsync(sb.ToString());
+                                return;
                             }
-                            else
+
+                            if (e.StandingsMessageId > 0)
                             {
-                                image.Save(memoryStream, System.Drawing.Imaging.ImageFormat.Png);
+                                try
+                                {
+                                    await channel.DeleteMessageAsync(e.StandingsMessageId);
+                                }
+                                catch { }
                             }
 
                             memoryStream.Position = 0;
-                            await Context.Channel.SendFileAsync
-                                (memoryStream, $"{championship}-standings-{DateTime.Now.ToString("yyyy-dd-M-HH-mm-ss")}.png");
-                        }
 
-                        font.Dispose(); numberFont.Dispose(); longDriverFont.Dispose(); largerFont.Dispose();
+                            var standingsMessage = await channel.SendFileAsync
+                                (memoryStream, $"{e.Name}-standings-{DateTime.Now.ToString("yyyy-dd-M-HH-mm-ss")}.png");
+
+                            e.StandingsMessageId = standingsMessage.Id;
+                            await postNextRoundAsync(e, channel);
+                            await _events.SaveAsync(e);
+                        }
                     }
+                    else
+                    {
+                        await _twitterIntegrationService.PostImage(image, e.TwitterMessage); 
+                        sb.AppendLine($"Championship {e.Name} standings tweeted!");
+                        await ReplyAsync(sb.ToString());
+                        return;
+                    }    
                 }
             }
             catch (Exception ex)
@@ -410,9 +373,50 @@ namespace TTBot.Commands
             }
         }
 
+        private async Task postNextRoundAsync(Event e, IMessageChannel channel )
+        {
+            var sb = new StringBuilder();
+            var zone = NodaTime.TimeZones.TzdbDateTimeZoneSource.Default.ForId("Europe/London");
+            var nextDateNoda = Instant.FromDateTimeOffset(e.NextRoundDate);
+            var nextDate = new ZonedDateTime(nextDateNoda, zone);
+
+            var unixTimeWithOffset = nextDate.ToDateTimeOffset().ToUnixTimeSeconds();
+
+            var description = e.NextRoundTrack != ""
+                ? $"{e.NextRoundTrack} @ {e.NextRoundDate.ToString("dd MMMM yyyy HH:mm")} (BST){Environment.NewLine}" +
+                $"<t:{unixTimeWithOffset}> (local) <t:{unixTimeWithOffset}:R>"
+                : "Season completed. Stay tuned for news of further seasons!";
+
+            var builder = new EmbedBuilder()
+                .WithTitle("Next Round")
+                .WithDescription(description);
+
+            if (e.NextTrackMessageId > 0)
+            {
+                try
+                {
+                    await channel.DeleteMessageAsync(e.NextTrackMessageId);
+                }
+                catch { }
+            }
+
+            try
+            {
+                var nextRaceMessage = await channel.SendMessageAsync(embed: builder.Build());
+                e.NextTrackMessageId = nextRaceMessage.Id;
+                await _events.SaveAsync(e);
+            }
+            catch (Exception ex)
+            {
+                sb.AppendLine($"Error sending image to sign-up channel: {ex.Message}");
+                await ReplyAsync(sb.ToString());
+            }
+
+        }
+
         [Command("alias")]
         [Alias("a")]
-        public async Task Alias(string action = null, string alias = null, string eventShortName = null)
+        public async Task Alias(string action = null, string aliases = null, string eventShortName = null)
         {
             var author = Context.Message.Author as SocketGuildUser;
             if (!await _permissionService.UserIsModeratorAsync(Context, author))
@@ -432,7 +436,7 @@ namespace TTBot.Commands
 
             if (action == "add")
             {
-                if (eventShortName == null || alias == null)
+                if (eventShortName == null || aliases == null)
                 {
                     sb.AppendLine("Details missing for the add");
                     await ReplyAsync(sb.ToString());
@@ -446,40 +450,47 @@ namespace TTBot.Commands
                     return;
                 }
 
-                if (await _eventAliasMapping.ActiveEventExistsAsync(alias))
-                {
-                    sb.AppendLine($"Alias {alias} already exists on active event");
-                    await ReplyAsync(sb.ToString());
-                    return;
-                }
+                var aliasesList = aliases.Split(',').Select(p => p.Trim()).ToList();
 
-                await _eventAliasMapping.AddAsync((ulong)e.Id, alias);
-                sb.AppendLine($"Alias {alias} added for event {eventShortName}");
-                await ReplyAsync(sb.ToString());
-                return;
+                foreach (var alias in aliasesList)
+                {
+                    if (await _eventAliasMapping.ActiveEventExistsAsync(alias, guildId))
+                    {
+                        sb.AppendLine($"Alias {alias} already exists on active event");
+                    }
+                    else
+                    {
+                        await _eventAliasMapping.AddAsync((ulong)e.Id, alias);
+                        sb.AppendLine($"Alias {alias} added for event {eventShortName}");
+                    }
+                }
             }
             else if (action == "remove")
             {
-                if (alias == null)
+                if (aliases == null)
                 {
-                    sb.AppendLine("Alias missing for the remove");
-                    await ReplyAsync(sb.ToString());
-                    return;
-                }
-                if (!await _eventAliasMapping.ActiveEventExistsAsync(alias))
-                {
-                    sb.AppendLine($"Alias {alias} does not exist on an active event");
+                    sb.AppendLine("Aliases missing for the remove");
                     await ReplyAsync(sb.ToString());
                     return;
                 }
 
-                var activeEvent = await _eventAliasMapping.GetActiveEventFromAliasAsync(alias);
-                var aliasMappingId = await _eventAliasMapping.GetAliasIdAsync(alias);
-                await _eventAliasMapping.RemoveAsync(aliasMappingId);
-                sb.AppendLine($"Alias {alias} removed for active event {activeEvent.ShortName}");
-                await ReplyAsync(sb.ToString());
-                return;
+                var aliasesList = aliases.Split(',').Select(p => p.Trim()).ToList();
 
+                foreach (var alias in aliasesList)
+                {
+                    if (!await _eventAliasMapping.ActiveEventExistsAsync(alias, guildId))
+                    {
+                        sb.AppendLine($"Alias {alias} does not exist on an active event");
+                    }
+                    else
+                    {
+                        var activeEvent = await _eventAliasMapping.GetActiveEventFromAliasAsync(alias, guildId);
+                        var aliasMappingId = await _eventAliasMapping.GetAliasIdAsync(alias, guildId);
+                        await _eventAliasMapping.RemoveAsync(aliasMappingId);
+                        sb.AppendLine($"Alias {alias} removed for active event {activeEvent.ShortName}");
+                    }
+
+                }
             }
             else if (action == "list")
             {
@@ -499,7 +510,7 @@ namespace TTBot.Commands
                         continue;
                     }
 
-                        if (eId != em.EventId)
+                    if (eId != em.EventId)
                     {
                         if (eId > 0)
                         {
@@ -508,7 +519,7 @@ namespace TTBot.Commands
                         }
                         sb.Append("***");
                         sb.Append(allActiveEvents.Where<Event>
-                            (e => (ulong)e.Id == em.EventId).Select(e => e.ShortName).FirstOrDefault());
+                            (e => (ulong)e.Id == em.EventId).Select(e => e.Name).FirstOrDefault());
                         sb.Append("***");
                         sb.Append(": ");
                     }
@@ -520,8 +531,6 @@ namespace TTBot.Commands
                     sb.Append($"{em.Alias}");
                     eId = em.EventId;
                 }
-                await ReplyAsync(sb.ToString());
-                return;
             } else
             {
                 sb.AppendLine("Incorrect action - must be either add, remove or list");
@@ -629,7 +638,7 @@ namespace TTBot.Commands
                         }
                         sb.Append("***");
                         sb.Append(allActiveEvents.Where<Event>
-                            (e => (ulong)e.Id == w.EventId).Select(e => e.ShortName).FirstOrDefault());
+                            (e => (ulong)e.Id == w.EventId).Select(e => e.Name).FirstOrDefault());
                         sb.Append("***");
                         sb.Append(": ");
                     }
