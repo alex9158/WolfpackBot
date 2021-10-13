@@ -6,10 +6,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using WolfpaackBot.Models;
-using WolfpaackBot.Services;
+using WolfpackBot.Models;
+using WolfpackBot.Services;
 
-namespace WolfpaackBot.DataAccess
+namespace WolfpackBot.DataAccess
 {
     public class Leaderboards : ILeaderboards
     {

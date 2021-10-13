@@ -6,11 +6,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using WolfpaackBot.DataAccess;
-using WolfpaackBot.Extensions;
-using WolfpaackBot.Models;
+using WolfpackBot.DataAccess;
+using WolfpackBot.Extensions;
+using WolfpackBot.Models;
 
-namespace WolfpaackBot.Services
+namespace WolfpackBot.Services
 {
     public class EventParticipantService : IEventParticipantService
     {

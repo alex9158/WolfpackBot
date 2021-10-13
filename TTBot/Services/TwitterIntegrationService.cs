@@ -12,7 +12,7 @@ using Tweetinvi;
 using Tweetinvi.Models;
 using Tweetinvi.Parameters;
 
-namespace WolfpaackBot.Services
+namespace WolfpackBot.Services
 {
     class TwitterIntegrationService : ITwitterIntegrationService
     {

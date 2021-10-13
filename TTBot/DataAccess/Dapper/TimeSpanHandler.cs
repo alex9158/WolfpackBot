@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Text;
 
-namespace WolfpaackBot.DataAccess.Dapper
+namespace WolfpackBot.DataAccess.Dapper
 {
     public class TimeSpanHandler : SqlMapper.TypeHandler<TimeSpan>
     {

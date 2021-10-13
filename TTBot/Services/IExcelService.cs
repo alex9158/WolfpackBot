@@ -3,9 +3,9 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
-using WolfpaackBot.Models;
+using WolfpackBot.Models;
 
-namespace WolfpaackBot.Services
+namespace WolfpackBot.Services
 {
     public interface IExcelService
     {

@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
-using WolfpaackBot.Models;
+using WolfpackBot.Models;
 
-namespace WolfpaackBot.DataAccess
+namespace WolfpackBot.DataAccess
 {
     public interface IChampionshipResults
     {

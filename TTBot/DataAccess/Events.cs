@@ -4,10 +4,10 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
-using WolfpaackBot.Models;
+using WolfpackBot.Models;
 using System.Linq;
 
-namespace WolfpaackBot.DataAccess
+namespace WolfpackBot.DataAccess
 {
     public class Events : IEvents
     {

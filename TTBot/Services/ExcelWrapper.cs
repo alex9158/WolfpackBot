@@ -7,10 +7,10 @@ using System.IO;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
-using WolfpaackBot.DataAccess;
-using WolfpaackBot.Models;
+using WolfpackBot.DataAccess;
+using WolfpackBot.Models;
 
-namespace WolfpaackBot.Services
+namespace WolfpackBot.Services
 {
     public class ExcelWrapper : IExcelWrapper
     {

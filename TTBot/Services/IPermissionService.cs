@@ -2,7 +2,7 @@
 using Discord.WebSocket;
 using System.Threading.Tasks;
 
-namespace WolfpaackBot.Services
+namespace WolfpackBot.Services
 {
     public interface IPermissionService
     {

@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using WolfpaackBot.Models;
+using WolfpackBot.Models;
 
-namespace WolfpaackBot.DataAccess
+namespace WolfpackBot.DataAccess
 {
     public interface IModerator
     {

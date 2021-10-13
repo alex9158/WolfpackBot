@@ -2,9 +2,9 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using WolfpaackBot.Models;
+using WolfpackBot.Models;
 
-namespace WolfpaackBot.Services
+namespace WolfpackBot.Services
 {
     public class ExcelService : IExcelService
     {

@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace WolfpaackBot.Models
+namespace WolfpackBot.Models
 {
     [Alias("ChampionshipResults")]
     public class ChampionshipResultsModel
