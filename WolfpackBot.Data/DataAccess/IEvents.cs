@@ -1,14 +1,14 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using WolfpackBot.Models;
+using WolfpackBot.Data.Models;
 
 namespace WolfpackBot.Data.DataAccess
 {
     public interface IEvents
     {
-        Task<List<EventsWithCount>> GetActiveEvents(ulong guildId);
-        Task<EventsWithCount> GetActiveEvent(string name, ulong guildId);
-        Task<EventsWithCount> GetActiveEvent(int eventId);
-        Task<EventsWithCount> GetEventByMessageIdAsync(ulong messageId);
+        Task<Event> GetActiveEvent(string name, ulong guildId);
+        Task<Event> GetActiveEvent(int eventId);
+        Task<List<Event>> GetActiveEvents(ulong guildId);
+        Task<Event> GetEventByMessageIdAsync(ulong messageId);
     }
 }

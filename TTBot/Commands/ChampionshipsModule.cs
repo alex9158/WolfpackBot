@@ -13,6 +13,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using WolfpackBot.Data;
 using WolfpackBot.Data.DataAccess;
+using WolfpackBot.Data.Models;
 using WolfpackBot.DataAccess;
 using WolfpackBot.Models;
 using WolfpackBot.Services;

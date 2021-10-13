@@ -8,9 +8,9 @@ using System.Text;
 using System.Threading.Tasks;
 using WolfpackBot.Data;
 using WolfpackBot.Data.DataAccess;
+using WolfpackBot.Data.Models;
 using WolfpackBot.DataAccess;
 using WolfpackBot.Extensions;
-using WolfpackBot.Models;
 
 namespace WolfpackBot.Services
 {
@@ -27,7 +27,7 @@ namespace WolfpackBot.Services
             _db = db;
         }
 
-        public async Task<IMessage> CreateAndPinParticipantMessage(ISocketMessageChannel channel, EventsWithCount @event)
+        public async Task<IMessage> CreateAndPinParticipantMessage(ISocketMessageChannel channel, Event @event)
         {
             var signups = await _eventSignups.GetAllSignupsForEvent(@event);
             var embed = await GetParticipantsEmbed(channel, @event, signups);
@@ -38,7 +38,7 @@ namespace WolfpackBot.Services
             return message;
         }
 
-        public async Task<string> GetParticipantsMessageBody(ISocketMessageChannel channel, EventsWithCount @event, List<EventSignup> signups, bool showJoinPrompt = true)
+        public async Task<string> GetParticipantsMessageBody(ISocketMessageChannel channel, Event @event, List<EventSignup> signups, bool showJoinPrompt = true)
         {
             var users = await Task.WhenAll(signups.Select(async sup => (await channel.GetUserAsync(Convert.ToUInt64(sup.UserId)) as SocketGuildUser)));
 
@@ -70,7 +70,7 @@ namespace WolfpackBot.Services
             return message;
         }
 
-        public async Task<Embed> GetParticipantsEmbed(ISocketMessageChannel channel, EventsWithCount @event, List<EventSignup> signups, bool showJoinPrompt = true)
+        public async Task<Embed> GetParticipantsEmbed(ISocketMessageChannel channel, Event @event, List<EventSignup> signups, bool showJoinPrompt = true)
         {
 
             var users = new List<SocketGuildUser>();
@@ -117,13 +117,13 @@ namespace WolfpackBot.Services
             return builder.Build();
         }
 
-        public async Task UpdatePinnedMessageForEvent(ISocketMessageChannel channel, EventsWithCount @event, IUserMessage message)
+        public async Task UpdatePinnedMessageForEvent(ISocketMessageChannel channel, Event @event, IUserMessage message)
         {
             var messageEmbed = await GetParticipantsEmbed(channel, @event, await _eventSignups.GetAllSignupsForEvent(@event));
             await (message).ModifyAsync(prop => { prop.Embed = messageEmbed; prop.Content = null; });
         }
 
-        public async Task UpdatePinnedMessageForEvent(ISocketMessageChannel channel, EventsWithCount @event)
+        public async Task UpdatePinnedMessageForEvent(ISocketMessageChannel channel, Event @event)
         {
             IMessage message;
             if (@event.MessageId == null || (message = await channel.GetMessageAsync(Convert.ToUInt64(@event.MessageId))) == null)

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using WolfpackBot.Models;
+using WolfpackBot.Data.Models;
 
 namespace WolfpackBot.Data.DataAccess
 {
@@ -17,24 +17,24 @@ namespace WolfpackBot.Data.DataAccess
             _db = db;
         }
 
-        public async Task<EventsWithCount> GetActiveEvent(string name, ulong guildId)
+        public async Task<Event> GetActiveEvent(string name, ulong guildId)
         {
-            return await _db.EventsWithCount.SingleAsync(ev => (ev.Name.ToLower() == name.ToLower() || (ev.ShortName != null && ev.ShortName.ToLower() == name.ToLower())) && ev.GuildId == guildId.ToString() && !ev.Closed);
+            return await _db.Events.SingleAsync(ev => (ev.Name.ToLower() == name.ToLower() || (ev.ShortName != null && ev.ShortName.ToLower() == name.ToLower())) && ev.GuildId == guildId.ToString() && !ev.Closed);
         }
 
-        public async Task<EventsWithCount> GetActiveEvent(int eventId)
+        public async Task<Event> GetActiveEvent(int eventId)
         {
-            return await _db.EventsWithCount.SingleAsync(ev => ev.Id == eventId && !ev.Closed);
+            return await _db.Events.SingleAsync(ev => ev.Id == eventId && !ev.Closed);
         }
 
-        public async Task<List<EventsWithCount>> GetActiveEvents(ulong guildId)
+        public async Task<List<Event>> GetActiveEvents(ulong guildId)
         {
-            return await _db.EventsWithCount.Where(ev => !ev.Closed && ev.GuildId == guildId.ToString()).ToListAsync();
+            return await _db.Events.Where(ev => !ev.Closed && ev.GuildId == guildId.ToString()).ToListAsync();
         }
 
-        public async Task<EventsWithCount> GetEventByMessageIdAsync(ulong messageId)
+        public async Task<Event> GetEventByMessageIdAsync(ulong messageId)
         {
-            return await _db.EventsWithCount.SingleAsync<EventsWithCount>(e => e.MessageId == messageId.ToString());
+            return await _db.Events.SingleAsync(e => e.MessageId == messageId.ToString());
         }   
     }
 }

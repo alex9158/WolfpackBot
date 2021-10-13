@@ -10,6 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 using WolfpackBot.Data;
 using WolfpackBot.Data.DataAccess;
+using WolfpackBot.Data.Models;
 using WolfpackBot.DataAccess;
 using WolfpackBot.Extensions;
 using WolfpackBot.Models;
@@ -73,7 +74,7 @@ namespace WolfpackBot.Commands
             catch (Discord.Net.HttpException) { /* ignore forbidden exception */ }
             
 
-            var @event = new Models.Event
+            var @event = new Event
             {
                 ChannelId = Context.Channel.Id.ToString(),
                 GuildId = Context.Guild.Id.ToString(),
@@ -139,7 +140,7 @@ namespace WolfpackBot.Commands
             }
             else
             {
-                await Context.Channel.SendMessageAsync($"Currently active events:{Environment.NewLine}{string.Join(Environment.NewLine, activeEvents.Select(ev => $"{ev.Name}{(ev.SpaceLimited ? $" - {ev.ParticipantCount}/{ev.Capacity} participants" : "")}"))}");
+                await Context.Channel.SendMessageAsync($"Currently active events:{Environment.NewLine}{string.Join(Environment.NewLine, activeEvents.Select(ev => $"{ev.Name}{(ev.SpaceLimited ? $" - {ev.EventSignups.Count}/{ev.Capacity} participants" : "")}"))}");
                 await Context.Channel.SendMessageAsync($"Join any active event with the command `!event signup event name`");
             }
         }
@@ -160,7 +161,7 @@ namespace WolfpackBot.Commands
                 return;
             }
 
-            if (existingEvent.SpaceLimited && existingEvent.ParticipantCount >= existingEvent.Capacity)
+            if (existingEvent.SpaceLimited && existingEvent.EventSignups.Count >= existingEvent.Capacity)
             {
                 await Context.Message.Author.SendMessageAsync($"Sorry, but {eventName} is already full! Keep an eye out in-case someone pulls out.");
                 return;
@@ -329,7 +330,7 @@ namespace WolfpackBot.Commands
             await _confirmationCheckPrinter.WriteMessage(this.Context.Channel, message, existingEvent);
         }
 
-        private async Task UpdateConfirmationCheckForEvent(EventsWithCount @event)
+        private async Task UpdateConfirmationCheckForEvent(Event @event)
         {
             var confirmationCheck = await _confirmationChecks.GetMostRecentConfirmationCheckForEventAsync(@event.Id);
             if (confirmationCheck == null)

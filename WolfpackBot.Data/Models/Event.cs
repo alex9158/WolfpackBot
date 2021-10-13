@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text;
 
-namespace WolfpackBot.Models
+namespace WolfpackBot.Data.Models
 {
     public class Event
     {
-       
+
         public int Id { get; set; }
         public string Name { get; set; }
         public string ShortName { get; set; }
@@ -29,6 +29,25 @@ namespace WolfpackBot.Models
         public string NextRoundTrack { get; set; }
         public ulong NextTrackMessageId { get; set; }
         public string TwitterMessage { get; set; }
+
+        [NotMapped]
+        public bool Full
+        {
+            get
+            {
+                if (!SpaceLimited)
+                {
+                    return false;
+                }
+
+                if (EventSignups == null)
+                {
+                    return true;
+                }
+
+                return EventSignups.Count >= Capacity;
+            }
+        }
 
         public virtual ICollection<EventSignup> EventSignups { get; set; }
     }

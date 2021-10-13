@@ -8,6 +8,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using WolfpackBot.Data.Models;
 using WolfpackBot.DataAccess;
 using WolfpackBot.Extensions;
 using WolfpackBot.Models;
@@ -23,7 +24,7 @@ namespace WolfpackBot.Services
             _eventSignups = eventSignups;
         }
 
-        public async Task WriteMessage(ISocketMessageChannel channel, IUserMessage message, EventsWithCount @event)
+        public async Task WriteMessage(ISocketMessageChannel channel, IUserMessage message, Event @event)
         {
             var messageContents = $"**Confirmation Check for {@event.Name}!{Environment.NewLine}" +
                 $"Please confirm your attendance by reacting to this message.**{Environment.NewLine}{Environment.NewLine}";

@@ -22,6 +22,7 @@ using WolfpackBot.Exceptions;
 using WolfpackBot.Data;
 using WolfpackBot.Data.DataAccess;
 using Microsoft.EntityFrameworkCore;
+using WolfpackBot.Data.Models;
 
 namespace WolfpackBot
 {

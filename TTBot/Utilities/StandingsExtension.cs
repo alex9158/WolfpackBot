@@ -14,6 +14,7 @@ using WolfpackBot.Models;
 using WolfpackBot.Extensions;
 using System.Text.RegularExpressions;
 using System.Globalization;
+using WolfpackBot.Data.Models;
 
 namespace WolfpackBot.Utilities
 {
