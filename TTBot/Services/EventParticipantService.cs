@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using WolfpackBot.Data;
+using WolfpackBot.Data.DataAccess;
 using WolfpackBot.DataAccess;
 using WolfpackBot.Extensions;
 using WolfpackBot.Models;
@@ -16,11 +18,13 @@ namespace WolfpackBot.Services
     {
         private readonly IEventSignups _eventSignups;
         private readonly IEvents _events;
+        private readonly WolfpackDbContext _db;
 
-        public EventParticipantService(IEventSignups eventSignups, IEvents events)
+        public EventParticipantService(IEventSignups eventSignups, IEvents events, WolfpackDbContext db)
         {
             _eventSignups = eventSignups;
             _events = events;
+            _db = db;
         }
 
         public async Task<IMessage> CreateAndPinParticipantMessage(ISocketMessageChannel channel, EventsWithCount @event)
@@ -30,7 +34,7 @@ namespace WolfpackBot.Services
             var message = await channel.SendMessageAsync(embed: embed);
             await message.PinAsync();
             @event.MessageId = message.Id.ToString();
-            await _events.SaveAsync(@event);
+            await _db.SaveChangesAsync();
             return message;
         }
 

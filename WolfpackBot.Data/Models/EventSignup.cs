@@ -1,4 +1,4 @@
-﻿using ServiceStack.DataAnnotations;
+﻿
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -7,12 +7,9 @@ namespace WolfpackBot.Models
 {
     public class EventSignup
     {
-        [AutoIncrement]
-        [PrimaryKey]
-        public int Id { get; set; }
-
-        [ForeignKey(typeof(Event))]
+        public int Id { get; set; }    
         public int EventId { get; set; }
         public string UserId { get; set; }
+        public virtual Event @event { get; set; }
     }
 }

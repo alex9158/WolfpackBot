@@ -11,6 +11,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Transactions;
+using WolfpackBot.Data.DataAccess;
 using WolfpackBot.DataAccess;
 using WolfpackBot.Models;
 using WolfpackBot.Services;

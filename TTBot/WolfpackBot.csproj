@@ -9,15 +9,16 @@
 	<ItemGroup>
 		<PackageReference Include="Dapper" Version="2.0.35" />
 		<PackageReference Include="Discord.Net" Version="2.4.0" />
-		<PackageReference Include="EPPlus" Version="5.4.2" />
+		<PackageReference Include="EPPlus" Version="5.7.5" />
 		<PackageReference Include="Microsoft.Data.Sqlite" Version="3.1.9" />
-		<PackageReference Include="Microsoft.Extensions.Configuration" Version="3.1.9" />
-		<PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="3.1.9" />
-		<PackageReference Include="Microsoft.Extensions.Configuration.CommandLine" Version="3.1.9" />
-		<PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="3.1.9" />
-		<PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="3.1.9" />
-		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.9" />
-		<PackageReference Include="NodaTime" Version="3.0.6" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="5.0.11" />
+		<PackageReference Include="Microsoft.Extensions.Configuration" Version="5.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="5.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.CommandLine" Version="5.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="5.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="5.0.0" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.2" />
+		<PackageReference Include="NodaTime" Version="3.0.7" />
 		<PackageReference Include="ServiceStack.OrmLite.Sqlite" Version="5.9.2" />
 		<PackageReference Include="System.Data.SqlClient" Version="4.8.2" />
 		<PackageReference Include="System.Runtime" Version="4.3.1" />
@@ -32,6 +33,10 @@
 		<Content Include="Assets/Fonts/Formula1-Regular.otf">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\WolfpackBot.Data\WolfpackBot.Data.csproj" />
 	</ItemGroup>
 
 </Project>

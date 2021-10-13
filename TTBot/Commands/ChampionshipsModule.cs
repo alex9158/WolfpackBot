@@ -11,6 +11,8 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using WolfpackBot.Data;
+using WolfpackBot.Data.DataAccess;
 using WolfpackBot.DataAccess;
 using WolfpackBot.Models;
 using WolfpackBot.Services;
@@ -29,6 +31,7 @@ namespace WolfpackBot.Commands
         private readonly IEventAliasMapping _eventAliasMapping;
         private readonly IExcelSheetEventMapping _excelSheetEventMapping;
         private readonly ITwitterIntegrationService _twitterIntegrationService;
+        private readonly WolfpackDbContext _db;
 
         public ChampionshipsModule(
             IChampionshipResults results,
@@ -37,7 +40,8 @@ namespace WolfpackBot.Commands
             IEvents events,
             IEventAliasMapping eventAliasMapping,
             IExcelSheetEventMapping excelSheetEventMapping,
-            ITwitterIntegrationService twitterIntegrationService)
+            ITwitterIntegrationService twitterIntegrationService,
+            WolfpackDbContext db)
         {
             _results = results ?? throw new ArgumentNullException(nameof(results));
             _permissionService = permissionService ?? throw new ArgumentNullException(nameof(permissionService));
@@ -46,6 +50,7 @@ namespace WolfpackBot.Commands
             _eventAliasMapping = eventAliasMapping ?? throw new ArgumentNullException(nameof(eventAliasMapping));
             _excelSheetEventMapping = excelSheetEventMapping ?? throw new ArgumentNullException(nameof(excelSheetEventMapping));
             _twitterIntegrationService = twitterIntegrationService ?? throw new ArgumentNullException(nameof(twitterIntegrationService));
+            _db = db ?? throw new ArgumentNullException(nameof(db));
         }
     
 
@@ -101,7 +106,7 @@ namespace WolfpackBot.Commands
                     // clear the Round column for each championship imported
                     // (it will be populated later and we want to avoid stale data)
                     e.Round = 0;
-                    await _events.SaveAsync(e);
+                    await _db.SaveChangesAsync();
 
                     ChampionshipResultsModel championshipResult = new ChampionshipResultsModel()
                     {
@@ -135,7 +140,7 @@ namespace WolfpackBot.Commands
                     e.LastRoundDate = c.LastRoundDate;
                     e.NextRoundTrack = c.NextRoundTrack;
                     e.NextRoundDate = c.NextRoundDate;
-                    await _events.SaveAsync(e);
+                    await _db.SaveChangesAsync();
                 }
 
 
@@ -211,7 +216,7 @@ namespace WolfpackBot.Commands
                     sb.AppendLine($"Twitter messaged deleted for {e.Name}");
                 }
 
-                await _events.SaveAsync(e);
+                await _db.SaveChangesAsync();
 
             }
             else if (action == "list")
@@ -353,8 +358,8 @@ namespace WolfpackBot.Commands
                                 (memoryStream, $"{e.Name}-standings-{DateTime.Now.ToString("yyyy-dd-M-HH-mm-ss")}.png");
 
                             e.StandingsMessageId = standingsMessage.Id;
-                            await postNextRoundAsync(e, channel);
-                            await _events.SaveAsync(e);
+                            await PostNextRoundAsync(e, channel);
+                            await _db.SaveChangesAsync();
                         }
                     }
                     else
@@ -373,7 +378,7 @@ namespace WolfpackBot.Commands
             }
         }
 
-        private async Task postNextRoundAsync(Event e, IMessageChannel channel )
+        private async Task PostNextRoundAsync(Event e, IMessageChannel channel )
         {
             var sb = new StringBuilder();
             var zone = NodaTime.TimeZones.TzdbDateTimeZoneSource.Default.ForId("Europe/London");
@@ -404,7 +409,7 @@ namespace WolfpackBot.Commands
             {
                 var nextRaceMessage = await channel.SendMessageAsync(embed: builder.Build());
                 e.NextTrackMessageId = nextRaceMessage.Id;
-                await _events.SaveAsync(e);
+                await _db.SaveChangesAsync();
             }
             catch (Exception ex)
             {

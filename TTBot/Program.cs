@@ -19,6 +19,9 @@ using System.Collections.Generic;
 using ServiceStack.Model;
 using ServiceStack;
 using WolfpackBot.Exceptions;
+using WolfpackBot.Data;
+using WolfpackBot.Data.DataAccess;
+using Microsoft.EntityFrameworkCore;
 
 namespace WolfpackBot
 {
@@ -151,6 +154,7 @@ namespace WolfpackBot
         {
             var eventSignups = _serviceProvider.GetRequiredService<IEventSignups>();
             var events = _serviceProvider.GetRequiredService<IEvents>();
+            var db = _serviceProvider.GetRequiredService<WolfpackDbContext>();
             var eventParticipantSets = _serviceProvider.GetRequiredService<IEventParticipantService>();
             var message = await cacheableMessage.GetOrDownloadAsync();
 
@@ -185,7 +189,8 @@ namespace WolfpackBot
                     var eventParticipantService = _serviceProvider.GetRequiredService<IEventParticipantService>();
                     await eventParticipantService.UnpinEventMessage(channel, @event);
                     @event.Closed = true;
-                    await events.SaveAsync(@event);
+                    
+                    await db.SaveChangesAsync();
                     await channel.SendMessageAsync($"{@event.Name} is now closed!");
                 }
             }
@@ -328,12 +333,16 @@ namespace WolfpackBot
             {
                 throw new InvalidConfigException();
             }
-
+            var conString = GetConnString();
+            Console.WriteLine("Con: " + conString);
+            services.AddDbContext<WolfpackDbContext>(options =>
+            {
+                options.UseSqlite(conString);
+            });
             services.AddScoped<IModerator, Moderator>();
             services.AddScoped<ILeaderboards, Leaderboards>();
             services.AddScoped<ILeaderboardEntries, LeaderboardEntries>();
-            var conString = GetConnString();
-            Console.WriteLine("Con: " + conString);
+       
             services.AddSingleton<IDbConnectionFactory>(new OrmLiteConnectionFactory(conString, SqliteDialect.Provider));
             services.AddScoped<IPermissionService, PermissionService>();
             services.AddScoped<IEvents, Events>();

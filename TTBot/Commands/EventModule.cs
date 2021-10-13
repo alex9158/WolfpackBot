@@ -8,6 +8,8 @@ using System.Linq;
 using System.Security;
 using System.Text;
 using System.Threading.Tasks;
+using WolfpackBot.Data;
+using WolfpackBot.Data.DataAccess;
 using WolfpackBot.DataAccess;
 using WolfpackBot.Extensions;
 using WolfpackBot.Models;
@@ -25,8 +27,9 @@ namespace WolfpackBot.Commands
         private readonly IConfirmationChecks _confirmationChecks;
         private readonly IConfirmationCheckPrinter _confirmationCheckPrinter;
         private readonly IEventParticipantService _eventParticipantService;
+        private readonly WolfpackDbContext _db;
 
-        public EventModule(IEvents events, IPermissionService permissionService, IEventSignups eventSignups, IConfirmationChecks confirmationChecks, IConfirmationCheckPrinter confirmationCheckPrinter, IEventParticipantService eventParticipantService)
+        public EventModule(IEvents events, IPermissionService permissionService, IEventSignups eventSignups, IConfirmationChecks confirmationChecks, IConfirmationCheckPrinter confirmationCheckPrinter, IEventParticipantService eventParticipantService, WolfpackDbContext db)
         {
             _events = events;
             _permissionService = permissionService;
@@ -34,6 +37,7 @@ namespace WolfpackBot.Commands
             _confirmationChecks = confirmationChecks;
             _confirmationCheckPrinter = confirmationCheckPrinter;
             _eventParticipantService = eventParticipantService;
+            _db = db;
         }
 
         [Command("create")]
@@ -79,7 +83,8 @@ namespace WolfpackBot.Commands
                 Name = eventName,
                 Capacity = capacity
             };
-            await _events.SaveAsync(@event);
+            _db.Add(@event);
+            await _db.SaveChangesAsync();
             existingEvent = await _events.GetActiveEvent(eventName, Context.Guild.Id);
             await Context.Channel.SendMessageAsync($"{Context.Message.Author.Mention} has created the event {eventName}! React to the message below to sign up to the event. If you can no longer attend, simply remove your reaction!");
             await _eventParticipantService.CreateAndPinParticipantMessage(Context.Channel, existingEvent);
@@ -118,7 +123,7 @@ namespace WolfpackBot.Commands
 
             await _eventParticipantService.UnpinEventMessage(Context.Channel, existingEvent);
             existingEvent.Closed = true;
-            await _events.SaveAsync(existingEvent);
+            await _db.SaveChangesAsync();
 
             await Context.Channel.SendMessageAsync($"{existingEvent.Name} is now closed!");
         }

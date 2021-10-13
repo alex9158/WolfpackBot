@@ -1,16 +1,17 @@
-﻿using ServiceStack.DataAnnotations;
+﻿
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Text;
 
 namespace WolfpackBot.Models
 {
-    [Alias("EventsWithCount")]
+
     public class EventsWithCount : Event
     {
         public int ParticipantCount { get; set; }
 
-        [Ignore]
+        [NotMapped]
         public bool Full
         {
             get
