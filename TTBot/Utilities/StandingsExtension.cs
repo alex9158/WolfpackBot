@@ -12,6 +12,8 @@ using System.Threading.Tasks;
 using WolfpackBot.DataAccess;
 using WolfpackBot.Models;
 using WolfpackBot.Extensions;
+using System.Text.RegularExpressions;
+using System.Globalization;
 
 namespace WolfpackBot.Utilities
 {
@@ -34,6 +36,8 @@ namespace WolfpackBot.Utilities
             int diffX = pointsX + 155;
 
             int lastRowY = 0;
+
+            Bitmap imageToReturn = null;
 
             string templateFilePath = @"Assets/StandingsTemplate.png";
             using (Bitmap image = (Bitmap)System.Drawing.Image.FromFile(templateFilePath))
@@ -162,15 +166,16 @@ namespace WolfpackBot.Utilities
                 if (lastRowY + 75 < image.Height)
                 {
                     var imageCropRect = new Rectangle(0, 0, image.Width, lastRowY + 75);
-                    return image.Clone(imageCropRect, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+                    imageToReturn = image.Clone(imageCropRect, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
 
                 }
                 else
                 {
-                    return image;
+                    imageToReturn = image;
                 }
-                
             }
+
+            return imageToReturn;
         }
 
         public static Bitmap BuildImage(SocketCommandContext context, Leaderboard leaderboard, List<LeaderboardEntry> results)
@@ -186,6 +191,8 @@ namespace WolfpackBot.Utilities
             var timeX = driverX + 605;
 
             int lastRowY = 0;
+
+            Bitmap imageToReturn = null;
 
             string templateFilePath = @"Assets/TimeTrialStandingsTemplate.png";
             using (Bitmap image = (Bitmap)System.Drawing.Image.FromFile(templateFilePath))
@@ -261,10 +268,11 @@ namespace WolfpackBot.Utilities
 
                     var userId = Convert.ToUInt64(item.value.SubmittedById);
                     var user = context.Guild.GetUser(userId).GetDisplayName();
+                    var userDisplay = Regex.Replace(user, @"\p{Cs}", String.Empty);
 
                     graphics.DrawString(
-                        user,
-                        graphics.GetAdjustedFont(user, font, driverSize),
+                        userDisplay,
+                        graphics.GetAdjustedFont(userDisplay, font, driverSize),
                         Brushes.White,
                         driverX,
                             user.Length <= 25 ? y : y + 6);
@@ -282,15 +290,16 @@ namespace WolfpackBot.Utilities
                 if (lastRowY + 75 < image.Height)
                 {
                     var imageCropRect = new Rectangle(0, 0, image.Width, lastRowY + 75);
-                    return image.Clone(imageCropRect, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-
+                    imageToReturn = image.Clone(imageCropRect, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
                 }
                 else
                 {
-                    return image;
+                    imageToReturn = image;
                 }
 
             }
+
+            return imageToReturn;
         }
     }
 }

@@ -184,18 +184,14 @@ namespace WolfpackBot.Commands
 
             var image = StandingsExtension.BuildImage(Context, leaderboard, standings);
 
-            using (MemoryStream memoryStream = new MemoryStream())
-            {
+            using MemoryStream memoryStream = new MemoryStream();
 
-                image.Save(memoryStream, System.Drawing.Imaging.ImageFormat.Png);
+            image.Save(memoryStream, System.Drawing.Imaging.ImageFormat.Jpeg);
 
-                memoryStream.Position = 0;
+            memoryStream.Position = 0;
 
-                await Context.Channel.SendFileAsync
-                    (memoryStream, $"{leaderboard.Description}-standings-{DateTime.Now.ToString("yyyy-dd-M-HH-mm-ss")}.png");
-
-
-            }
+            await Context.Channel.SendFileAsync
+                (memoryStream, $"{leaderboard.Description}-standings-{DateTime.Now.ToString("yyyy-dd-M-HH-mm-ss")}.png");
         }
 
         [Command("invalidate", ignoreExtraArgs: true)]
