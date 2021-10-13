@@ -37,6 +37,8 @@ namespace TTBot.Utilities
 
             int lastRowY = 0;
 
+            Bitmap imageToReturn = null;
+
             string templateFilePath = @"Assets/StandingsTemplate.png";
             using (Bitmap image = (Bitmap)System.Drawing.Image.FromFile(templateFilePath))
             using (Graphics graphics = Graphics.FromImage(image))
@@ -164,15 +166,16 @@ namespace TTBot.Utilities
                 if (lastRowY + 75 < image.Height)
                 {
                     var imageCropRect = new Rectangle(0, 0, image.Width, lastRowY + 75);
-                    return image.Clone(imageCropRect, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+                    imageToReturn = image.Clone(imageCropRect, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
 
                 }
                 else
                 {
-                    return image;
+                    imageToReturn = image;
                 }
-                
             }
+
+            return imageToReturn;
         }
 
         public static Bitmap BuildImage(SocketCommandContext context, Leaderboard leaderboard, List<LeaderboardEntry> results)
