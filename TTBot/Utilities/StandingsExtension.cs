@@ -13,6 +13,7 @@ using TTBot.DataAccess;
 using TTBot.Models;
 using TTBot.Extensions;
 using System.Text.RegularExpressions;
+using System.Globalization;
 
 namespace TTBot.Utilities
 {
@@ -188,6 +189,8 @@ namespace TTBot.Utilities
 
             int lastRowY = 0;
 
+            Bitmap imageToReturn = null;
+
             string templateFilePath = @"Assets/TimeTrialStandingsTemplate.png";
             using (Bitmap image = (Bitmap)System.Drawing.Image.FromFile(templateFilePath))
             using (Graphics graphics = Graphics.FromImage(image))
@@ -266,7 +269,7 @@ namespace TTBot.Utilities
 
                     graphics.DrawString(
                         userDisplay,
-                        graphics.GetAdjustedFont(user, font, driverSize),
+                        graphics.GetAdjustedFont(userDisplay, font, driverSize),
                         Brushes.White,
                         driverX,
                             user.Length <= 25 ? y : y + 6);
@@ -284,15 +287,16 @@ namespace TTBot.Utilities
                 if (lastRowY + 75 < image.Height)
                 {
                     var imageCropRect = new Rectangle(0, 0, image.Width, lastRowY + 75);
-                    return image.Clone(imageCropRect, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-
+                    imageToReturn = image.Clone(imageCropRect, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
                 }
                 else
                 {
-                    return image;
+                    imageToReturn = image;
                 }
 
             }
+
+            return imageToReturn;
         }
     }
 }
