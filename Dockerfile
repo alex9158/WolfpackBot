@@ -1,8 +1,9 @@
 FROM mcr.microsoft.com/dotnet/sdk:3.1 as build
 WORKDIR /build/
 COPY ./nuget.config ./
-COPY ./TTBot.sln ./
-COPY ./TTBot/TTBot.csproj ./TTBot/
+COPY ./WolfpackBot.sln ./
+COPY ./TTBot/WolfpackBot.csproj ./TTBot/
+COPY ./WolfpackBot.Data/WolfpackBot.Data.csproj ./WolfpackBot.Data/
 RUN dotnet restore 
 COPY ./ ./
 RUN dotnet publish -c Release -o /publish/
