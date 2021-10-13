@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace TTBot.Models
+namespace WolfpaackBot.Models
 {
     class ChampionshipPointsModel
     {

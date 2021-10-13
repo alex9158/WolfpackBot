@@ -6,9 +6,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using TTBot.Models;
+using WolfpaackBot.Models;
 
-namespace TTBot.DataAccess
+namespace WolfpaackBot.DataAccess
 {
     public class Moderator : IModerator
     {

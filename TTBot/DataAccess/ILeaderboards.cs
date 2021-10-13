@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using TTBot.Models;
+using WolfpaackBot.Models;
 
-namespace TTBot.DataAccess
+namespace WolfpaackBot.DataAccess
 {
     public interface ILeaderboards
     {

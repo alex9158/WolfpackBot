@@ -9,11 +9,11 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using TTBot.DataAccess;
-using TTBot.Models;
-using TTBot.Extensions;
+using WolfpaackBot.DataAccess;
+using WolfpaackBot.Models;
+using WolfpaackBot.Extensions;
 
-namespace TTBot.Utilities
+namespace WolfpaackBot.Utilities
 {
     public static class StandingsExtension
     {

@@ -1,6 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace TTBot.Utilities
+namespace WolfpaackBot.Utilities
 {
     public static class OperatingSystem
     {

@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Linq;
-namespace TTBot.Extensions
+namespace WolfpaackBot.Extensions
 {
     public static class SocketGuildUserExtensions
     {

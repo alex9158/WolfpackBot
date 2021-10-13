@@ -6,9 +6,9 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
-using TTBot.Models;
+using WolfpaackBot.Models;
 
-namespace TTBot.DataAccess
+namespace WolfpaackBot.DataAccess
 {
     public class EventSignups : IEventSignups
     {

@@ -4,7 +4,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Text;
 
-namespace TTBot.Utilities
+namespace WolfpaackBot.Utilities
 {
     public static class Draw
     {

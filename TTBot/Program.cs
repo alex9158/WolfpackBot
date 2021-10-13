@@ -7,20 +7,20 @@ using Discord.Commands;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using System.IO;
-using TTBot.DataAccess;
+using WolfpaackBot.DataAccess;
 using Dapper;
-using TTBot.DataAccess.Dapper;
-using TTBot.Services;
+using WolfpaackBot.DataAccess.Dapper;
+using WolfpaackBot.Services;
 using Microsoft.Data.Sqlite;
 using ServiceStack.OrmLite;
-using TTBot.Models;
+using WolfpaackBot.Models;
 using ServiceStack.Data;
 using System.Collections.Generic;
 using ServiceStack.Model;
 using ServiceStack;
-using TTBot.Exceptions;
+using WolfpaackBot.Exceptions;
 
-namespace TTBot
+namespace WolfpaackBot
 {
     class Program
     {

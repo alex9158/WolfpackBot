@@ -6,9 +6,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using TTBot.DataAccess;
+using WolfpaackBot.DataAccess;
 
-namespace TTBot.Commands
+namespace WolfpaackBot.Commands
 {
     [Group("mod")]
     public class ModeratorModule : ModuleBase<SocketCommandContext>

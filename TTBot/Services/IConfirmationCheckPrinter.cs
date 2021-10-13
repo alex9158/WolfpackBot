@@ -3,9 +3,9 @@ using Discord.Commands;
 using Discord.Rest;
 using Discord.WebSocket;
 using System.Threading.Tasks;
-using TTBot.Models;
+using WolfpaackBot.Models;
 
-namespace TTBot.Services
+namespace WolfpaackBot.Services
 {
     public interface IConfirmationCheckPrinter
     {

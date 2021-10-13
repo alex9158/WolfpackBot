@@ -5,9 +5,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using TTBot.DataAccess;
+using WolfpaackBot.DataAccess;
 
-namespace TTBot.Services
+namespace WolfpaackBot.Services
 {
     public class PermissionService : IPermissionService
     {

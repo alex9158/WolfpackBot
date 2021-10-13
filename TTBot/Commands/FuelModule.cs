@@ -12,10 +12,10 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Transactions;
-using TTBot.DataAccess;
-using TTBot.Services;
+using WolfpaackBot.DataAccess;
+using WolfpaackBot.Services;
 
-namespace TTBot.Commands
+namespace WolfpaackBot.Commands
 {
     [Group("fuel")]
     public class FuelModule : ModuleBase<SocketCommandContext>

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace TTBot.Exceptions
+namespace WolfpaackBot.Exceptions
 {
     [Serializable]
     public class InvalidConfigException : Exception

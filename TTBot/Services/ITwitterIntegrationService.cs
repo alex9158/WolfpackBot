@@ -2,7 +2,7 @@
 using System.Drawing;
 using System.Threading.Tasks;
 
-namespace TTBot.Services
+namespace WolfpaackBot.Services
 {
     public interface ITwitterIntegrationService
     {

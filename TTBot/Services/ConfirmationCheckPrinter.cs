@@ -8,11 +8,11 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using TTBot.DataAccess;
-using TTBot.Extensions;
-using TTBot.Models;
+using WolfpaackBot.DataAccess;
+using WolfpaackBot.Extensions;
+using WolfpaackBot.Models;
 
-namespace TTBot.Services
+namespace WolfpaackBot.Services
 {
     public class ConfirmationCheckPrinter : IConfirmationCheckPrinter
     {

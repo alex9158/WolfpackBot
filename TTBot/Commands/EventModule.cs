@@ -8,12 +8,12 @@ using System.Linq;
 using System.Security;
 using System.Text;
 using System.Threading.Tasks;
-using TTBot.DataAccess;
-using TTBot.Extensions;
-using TTBot.Models;
-using TTBot.Services;
+using WolfpaackBot.DataAccess;
+using WolfpaackBot.Extensions;
+using WolfpaackBot.Models;
+using WolfpaackBot.Services;
 
-namespace TTBot.Commands
+namespace WolfpaackBot.Commands
 {
     [Group("event")]
     [Alias("events")]

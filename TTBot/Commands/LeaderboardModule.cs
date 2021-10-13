@@ -11,12 +11,12 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Transactions;
-using TTBot.DataAccess;
-using TTBot.Models;
-using TTBot.Services;
-using TTBot.Utilities;
+using WolfpaackBot.DataAccess;
+using WolfpaackBot.Models;
+using WolfpaackBot.Services;
+using WolfpaackBot.Utilities;
 
-namespace TTBot.Commands
+namespace WolfpaackBot.Commands
 {
     [Group("leaderboard")]
     [Alias("l")]

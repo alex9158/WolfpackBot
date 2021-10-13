@@ -7,10 +7,10 @@ using System.IO;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
-using TTBot.DataAccess;
-using TTBot.Models;
+using WolfpaackBot.DataAccess;
+using WolfpaackBot.Models;
 
-namespace TTBot.Services
+namespace WolfpaackBot.Services
 {
     public class ExcelWrapper : IExcelWrapper
     {
