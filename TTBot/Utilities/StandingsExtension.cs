@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using TTBot.DataAccess;
 using TTBot.Models;
 using TTBot.Extensions;
+using System.Text.RegularExpressions;
 
 namespace TTBot.Utilities
 {
@@ -261,9 +262,10 @@ namespace TTBot.Utilities
 
                     var userId = Convert.ToUInt64(item.value.SubmittedById);
                     var user = context.Guild.GetUser(userId).GetDisplayName();
+                    var userDisplay = Regex.Replace(user, @"\p{Cs}", String.Empty);
 
                     graphics.DrawString(
-                        user,
+                        userDisplay,
                         graphics.GetAdjustedFont(user, font, driverSize),
                         Brushes.White,
                         driverX,
