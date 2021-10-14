@@ -13,6 +13,7 @@ namespace WolfpackBot.Data
 
         public DbSet<Leaderboard> Leaderboards { get; set; }
         public DbSet<LeaderboardEntry> LeaderboardEntries { get; set; }
+        public DbSet<LeaderboardModerator> LeaderboardModerators { get; set; }
 
         public WolfpackDbContext(DbContextOptions<WolfpackDbContext> options) : base(options)
         {
@@ -37,6 +38,8 @@ namespace WolfpackBot.Data
                 opt.Navigation(lb => lb.LeaderboardEntries).AutoInclude();
             });
             modelBuilder.Entity<LeaderboardEntry>(opt => opt.ToTable("LeaderboardEntries"));
+
+            modelBuilder.Entity<LeaderboardModerator>(opt => opt.HasKey(mod => new { mod.GuildId, mod.RoleId }));
         }
     }
 }

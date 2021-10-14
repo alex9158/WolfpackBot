@@ -1,12 +1,11 @@
 ﻿
-using ServiceStack.DataAnnotations;
+
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace WolfpackBot.Models
+namespace WolfpackBot.Data.Models
 {
-    [Alias("LeaderboardModerators")]
     public class LeaderboardModerator
     {
         public string RoleId { get; set; }

@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using WolfpackBot.DataAccess;
+using WolfpackBot.Data.DataAccess;
 
 namespace WolfpackBot.Commands
 {
@@ -30,7 +30,6 @@ namespace WolfpackBot.Commands
                 await _moderator.AddRoleAsModerator(this.Context.Guild.Id, role.Id);
                 await Context.Channel.SendMessageAsync(role.Name + " can now manage leaderboards");
             }
-            return;
         }
 
         [Command("remove", ignoreExtraArgs: true)]
@@ -43,14 +42,12 @@ namespace WolfpackBot.Commands
                 await _moderator.RemoveRoleAsModeratorAsync(this.Context.Guild.Id, role.Id);
                 await Context.Channel.SendMessageAsync(role.Name + " can no longer manage leaderboards");
             }
-            return;
         }
 
         [Command("list", ignoreExtraArgs: true)]
         [Summary("Lists users with permission to add/remove and moderate leaderboards for this server")]
         public async Task List()
         {
-
             var guild = ((SocketGuildChannel)this.Context.Channel).Guild;
             var moderators = await _moderator.GetLeaderboardModeratorsAsync(guild.Id);
             await this.Context.Channel.SendMessageAsync($"Leaderboard moderator roles: {string.Join(", ", moderators.Select(mod => guild.GetRole(Convert.ToUInt64(mod.RoleId))).Select(role => role.Name))}");
