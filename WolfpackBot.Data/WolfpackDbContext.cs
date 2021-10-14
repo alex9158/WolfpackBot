@@ -10,6 +10,10 @@ namespace WolfpackBot.Data
     {
 
         public DbSet<Event> Events { get; set; }
+
+        public DbSet<Leaderboard> Leaderboards { get; set; }
+        public DbSet<LeaderboardEntry> LeaderboardEntries { get; set; }
+
         public WolfpackDbContext(DbContextOptions<WolfpackDbContext> options) : base(options)
         {
 
@@ -26,6 +30,13 @@ namespace WolfpackBot.Data
                        .WithOne(e => e.@event);
                     opt.Navigation(opt => opt.EventSignups).AutoInclude();
                 });
+
+            modelBuilder.Entity<Leaderboard>(opt =>
+            {
+                opt.HasMany(lb => lb.LeaderboardEntries).WithOne(lbe => lbe.Leaderboard);
+                opt.Navigation(lb => lb.LeaderboardEntries).AutoInclude();
+            });
+            modelBuilder.Entity<LeaderboardEntry>(opt => opt.ToTable("LeaderboardEntries"));
         }
     }
 }

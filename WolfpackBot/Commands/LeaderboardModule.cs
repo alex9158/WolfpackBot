@@ -11,7 +11,9 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Transactions;
+using WolfpackBot.Data;
 using WolfpackBot.Data.DataAccess;
+using WolfpackBot.Data.Models;
 using WolfpackBot.DataAccess;
 using WolfpackBot.Models;
 using WolfpackBot.Services;
@@ -23,13 +25,15 @@ namespace WolfpackBot.Commands
     [Alias("l")]
     public class LeaderboardModule : ModuleBase<SocketCommandContext>
     {
+        private readonly WolfpackDbContext _db;
         private readonly ILeaderboards _leaderboards;
         private readonly ILeaderboardEntries _leaderboardEntries;
         private readonly IPermissionService _permissionService;
         private readonly IEvents _events;
 
-        public LeaderboardModule(ILeaderboards leaderboards, ILeaderboardEntries leaderboardEntries, IPermissionService permissionService, IEvents events)
+        public LeaderboardModule(WolfpackDbContext db, ILeaderboards leaderboards, ILeaderboardEntries leaderboardEntries, IPermissionService permissionService, IEvents events)
         {
+            _db = db;
             _leaderboards = leaderboards;
             _leaderboardEntries = leaderboardEntries;
             _permissionService = permissionService;
@@ -89,12 +93,11 @@ namespace WolfpackBot.Commands
                 await Context.Channel.SendMessageAsync($"There isn't an active leaderboard for ${Context.Channel.Name}");
             }
 
-            await Standings();
-
             leaderboard.Active = false;
-            await _leaderboards.UpdateAsync(leaderboard);
-
+            await _db.SaveChangesAsync();
             await Context.Channel.SendMessageAsync($"{leaderboard.Game} leaderboard is now closed");
+
+            await Standings();           
         }
 
         [Command("submit")]
@@ -160,7 +163,15 @@ namespace WolfpackBot.Commands
                 return;
             }
 
-            await _leaderboardEntries.AddAsync(leaderboard.Id, timespan, Context.User.Id, Context.Message.Attachments.First().Url);
+            leaderboard.LeaderboardEntries.Add(new LeaderboardEntry()
+            {
+                Time = timespan,
+                SubmittedById = Context.User.Id.ToString(),
+                ProofUrl = Context.Message.Attachments.First().Url,
+                SubmittedDate = DateTime.Now
+            });
+
+            await _db.SaveChangesAsync();
             await Context.Channel.SendMessageAsync($"Thanks {Context.User.Mention}! Your entry has been saved.");
             await Standings();
         }
@@ -219,7 +230,7 @@ namespace WolfpackBot.Commands
                 }
 
                 entry.Invalidated = true;
-                await _leaderboardEntries.Update(entry);
+                await _db.SaveChangesAsync();
                 await Context.Channel.SendMessageAsync("Best time by " + mentionedUser.Username + " has been invalidated");
 
             }

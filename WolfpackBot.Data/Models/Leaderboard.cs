@@ -1,15 +1,11 @@
-﻿using ServiceStack.DataAnnotations;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace WolfpackBot.Models
+namespace WolfpackBot.Data.Models
 {
-    [Alias("Leaderboards")]
     public class Leaderboard
     {
-        [AutoIncrement]
-        [PrimaryKey]
         public int Id { get; set; }
         public string GuildId { get; set; }
         public string ChannelId { get; set; }
@@ -18,6 +14,7 @@ namespace WolfpackBot.Models
         public DateTime StartDateTime { get; set; }
         public DateTime? EndDateTime { get; set; }
         public bool Active { get; set; }
+        public virtual ICollection<LeaderboardEntry> LeaderboardEntries { get; set; }
 
     }
 }
