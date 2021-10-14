@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using WolfpackBot.Data.Models;
-using WolfpackBot.Models;
 
 namespace WolfpackBot.DataAccess
 {

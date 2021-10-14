@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using WolfpackBot.Models;
+using WolfpackBot.Data.Models;
 
 namespace WolfpackBot.Services
 {

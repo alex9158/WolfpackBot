@@ -2,15 +2,15 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
-using WolfpackBot.Models;
+using WolfpackBot.Data.Models;
 
-namespace WolfpackBot.DataAccess
+namespace WolfpackBot.Data.DataAccess
 {
     public interface IChampionshipResults
     {
         Task AddAsync(List<ChampionshipResultsModel> championshipResults);
         Task<List<ChampionshipResultsModel>> GetChampionshipResultsByIdAsync(int championshipId);
-        Task DeleteAllGuildEvents<ChampionshipResultsModel>(string guildId);
+        Task DeleteAllGuildEvents(string guildId);
         Task<string[]> GetEventsWithResultsAsync();
     }
 }

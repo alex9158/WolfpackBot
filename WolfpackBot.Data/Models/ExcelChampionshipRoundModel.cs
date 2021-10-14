@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace WolfpackBot.Models
+namespace WolfpackBot.Data.Models
 {
     public class ExcelChampionshipRoundModel
     {

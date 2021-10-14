@@ -10,7 +10,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using WolfpackBot.DataAccess;
-using WolfpackBot.Models;
 using WolfpackBot.Extensions;
 using System.Text.RegularExpressions;
 using System.Globalization;

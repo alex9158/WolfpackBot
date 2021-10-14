@@ -50,5 +50,9 @@ namespace WolfpackBot.Data.Models
         }
 
         public virtual ICollection<EventSignup> EventSignups { get; set; }
+
+        public virtual ICollection<ChampionshipResultsModel> ChampionshipResults { get; set; }
+        public virtual ICollection<EventAliasMappingModel> EventAliasMappings { get; set; }
+        public virtual ICollection<ExcelSheetEventMappingModel> ExcelSheetEventMappings { get; set; }
     }
 }

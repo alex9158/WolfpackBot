@@ -13,7 +13,7 @@ using WolfpackBot.Data.DataAccess;
 using WolfpackBot.Data.Models;
 using WolfpackBot.DataAccess;
 using WolfpackBot.Extensions;
-using WolfpackBot.Models;
+
 using WolfpackBot.Services;
 
 namespace WolfpackBot.Commands

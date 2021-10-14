@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace WolfpackBot.Models
+namespace WolfpackBot.Data.Models
 {
-    class ChampionshipPointsModel
+    static class ChampionshipPointsModel
     {
         public static int FastestLapPoints = 10;
 

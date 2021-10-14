@@ -13,7 +13,6 @@ using WolfpackBot.DataAccess.Dapper;
 using WolfpackBot.Services;
 using Microsoft.Data.Sqlite;
 using ServiceStack.OrmLite;
-using WolfpackBot.Models;
 using ServiceStack.Data;
 using System.Collections.Generic;
 using ServiceStack.Model;

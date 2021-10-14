@@ -1,13 +1,13 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using WolfpackBot.Data.Models;
-using WolfpackBot.Models;
+using WolfpackBot.Data.Models;
 
-namespace WolfpackBot.DataAccess
+namespace WolfpackBot.Data.DataAccess
 {
     public interface IEventAliasMapping
     {
-        Task AddAsync(ulong eventId, string alias);
+        Task AddAsync(int eventId, string alias);
         Task RemoveAsync(int id);
         Task<Event> GetActiveEventFromAliasAsync(string alias, ulong guildId);
         Task<int> GetAliasIdAsync(string alias, ulong guildId);

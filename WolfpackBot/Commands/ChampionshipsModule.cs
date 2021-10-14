@@ -15,7 +15,6 @@ using WolfpackBot.Data;
 using WolfpackBot.Data.DataAccess;
 using WolfpackBot.Data.Models;
 using WolfpackBot.DataAccess;
-using WolfpackBot.Models;
 using WolfpackBot.Services;
 using WolfpackBot.Utilities;
 
@@ -75,7 +74,7 @@ namespace WolfpackBot.Commands
                 var guildId = Context.Guild.Id;
 
                 // clear out our results DB table first
-                await _results.DeleteAllGuildEvents<ChampionshipResultsModel>(guildId.ToString());
+                await _results.DeleteAllGuildEvents(guildId.ToString());
 
                 var attachment = Context.Message.Attachments.First();
                 var excelDriverDataModels = await _excelService.ReadResultsDataFromAttachment(attachment);
@@ -466,7 +465,7 @@ namespace WolfpackBot.Commands
                     }
                     else
                     {
-                        await _eventAliasMapping.AddAsync((ulong)e.Id, alias);
+                        await _eventAliasMapping.AddAsync(e.Id, alias);
                         sb.AppendLine($"Alias {alias} added for event {eventShortName}");
                     }
                 }
@@ -502,7 +501,7 @@ namespace WolfpackBot.Commands
             {
                 var allActiveAliases = await _eventAliasMapping.GetAllActiveAliases();
                 var allActiveEvents = await _events.GetActiveEvents(guildId);
-                ulong eId = 0;
+                var eId = 0;
 
                 foreach (var item in allActiveAliases.Select((value, i) => (value, i)))
                 {
@@ -511,7 +510,7 @@ namespace WolfpackBot.Commands
 
                     // only list active events
                     if (allActiveEvents.Where<Event>
-                            (e => (ulong)e.Id == em.EventId).Select(e => e.ShortName).FirstOrDefault() == null)
+                            (e => e.Id == em.EventId).Select(e => e.ShortName).FirstOrDefault() == null)
                     {
                         continue;
                     }
@@ -525,7 +524,7 @@ namespace WolfpackBot.Commands
                         }
                         sb.Append("***");
                         sb.Append(allActiveEvents.Where<Event>
-                            (e => (ulong)e.Id == em.EventId).Select(e => e.Name).FirstOrDefault());
+                            (e => e.Id == em.EventId).Select(e => e.Name).FirstOrDefault());
                         sb.Append("***");
                         sb.Append(": ");
                     }
