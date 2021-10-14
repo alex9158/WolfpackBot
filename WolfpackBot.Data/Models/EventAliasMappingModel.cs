@@ -11,8 +11,6 @@ namespace WolfpackBot.Data.Models
         public int Id { get; set; }
         public int EventId { get; set; }
         public string Alias { get; set; }
-
         public virtual Event Event { get; set; }
-
     }
 }
