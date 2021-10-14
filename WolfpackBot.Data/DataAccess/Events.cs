@@ -19,12 +19,12 @@ namespace WolfpackBot.Data.DataAccess
 
         public async Task<Event> GetActiveEvent(string name, ulong guildId)
         {
-            return await _db.Events.SingleAsync(ev => (ev.Name.ToLower() == name.ToLower() || (ev.ShortName != null && ev.ShortName.ToLower() == name.ToLower())) && ev.GuildId == guildId.ToString() && !ev.Closed);
+            return await _db.Events.SingleOrDefaultAsync(ev => (ev.Name.ToLower() == name.ToLower() || (ev.ShortName != null && ev.ShortName.ToLower() == name.ToLower())) && ev.GuildId == guildId.ToString() && !ev.Closed);
         }
 
         public async Task<Event> GetActiveEvent(int eventId)
         {
-            return await _db.Events.SingleAsync(ev => ev.Id == eventId && !ev.Closed);
+            return await _db.Events.SingleOrDefaultAsync(ev => ev.Id == eventId && !ev.Closed);
         }
 
         public async Task<List<Event>> GetActiveEvents(ulong guildId)
@@ -34,7 +34,7 @@ namespace WolfpackBot.Data.DataAccess
 
         public async Task<Event> GetEventByMessageIdAsync(ulong messageId)
         {
-            return await _db.Events.SingleAsync(e => e.MessageId == messageId.ToString());
+            return await _db.Events.SingleOrDefaultAsync(e => e.MessageId == messageId.ToString());
         }   
     }
 }

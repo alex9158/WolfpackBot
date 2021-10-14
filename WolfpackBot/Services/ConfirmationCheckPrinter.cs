@@ -17,11 +17,9 @@ namespace WolfpackBot.Services
 {
     public class ConfirmationCheckPrinter : IConfirmationCheckPrinter
     {
-        private readonly IEventSignups _eventSignups;
 
-        public ConfirmationCheckPrinter(IEventSignups eventSignups)
-        {
-            _eventSignups = eventSignups;
+        public ConfirmationCheckPrinter()
+        {            
         }
 
         public async Task WriteMessage(ISocketMessageChannel channel, IUserMessage message, Event @event)
@@ -32,8 +30,7 @@ namespace WolfpackBot.Services
             {
                 messageContents += $"You can still sign up to this event by typing `!event join {@event.DisplayName}`{Environment.NewLine}{Environment.NewLine}";
             }
-
-            var signUps = await _eventSignups.GetAllSignupsForEvent(@event);
+      
             var confirmed = new List<IUser>();
 
             foreach (var reaction in message.Reactions)
@@ -42,8 +39,8 @@ namespace WolfpackBot.Services
                 confirmed.AddRange(reactors);
             }
 
-            confirmed = confirmed.Distinct(new UserEqualityComparer()).Where(confirmed => signUps.Any(sup => sup.UserId == confirmed.Id.ToString())).ToList();
-            var unconfirmed = signUps.Where(signUp => !confirmed.Any(con => con.Id.ToString() == signUp.UserId));
+            confirmed = confirmed.Distinct(new UserEqualityComparer()).Where(confirmed => @event.EventSignups.Any(sup => sup.UserId == confirmed.Id.ToString())).ToList();
+            var unconfirmed = @event.EventSignups.Where(signUp => !confirmed.Any(con => con.Id.ToString() == signUp.UserId));
             var channelUsers = await channel.GetUsersAsync().FlattenAsync();
             var unconfirmedUsers = unconfirmed.Select(u => channelUsers.FirstOrDefault(cu => cu.Id.ToString() == u.UserId)).ToList();
 

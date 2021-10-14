@@ -49,7 +49,7 @@ namespace WolfpackBot
         {
             var services = new ServiceCollection();
 
-            InitServices(services, args);
+            ConfigureServices(services, args);
             CreateDataDirectory();
             InitDapperTypeHandlers();
             _serviceProvider = services.BuildServiceProvider();
@@ -127,10 +127,10 @@ namespace WolfpackBot
             }
 
 
-         /*   if (channel is SocketTextChannel textChannel)
-            {
-                await textChannel.Guild.Owner.SendMessageAsync($"{nickName} signed out of {@event.Name}");
-            }*/
+            /*   if (channel is SocketTextChannel textChannel)
+               {
+                   await textChannel.Guild.Owner.SendMessageAsync($"{nickName} signed out of {@event.Name}");
+               }*/
 
             await eventSignups.DeleteAsync(existingSignup);
             await eventParticipantSets.UpdatePinnedMessageForEvent(channel, @event, message);
@@ -181,7 +181,8 @@ namespace WolfpackBot
             }
 
 
-            if (reaction.User.Value is IGuildUser user) {
+            if (reaction.User.Value is IGuildUser user)
+            {
                 var moderatorService = _serviceProvider.GetRequiredService<IModerator>();
                 var moderators = await moderatorService.GetLeaderboardModeratorsAsync(user.GuildId);
                 if ((user.GuildPermissions.ManageGuild || moderators.Exists(m => user.RoleIds.Any(r => r.ToString() == m.RoleId)))
@@ -190,7 +191,7 @@ namespace WolfpackBot
                     var eventParticipantService = _serviceProvider.GetRequiredService<IEventParticipantService>();
                     await eventParticipantService.UnpinEventMessage(channel, @event);
                     @event.Closed = true;
-                    
+
                     await db.SaveChangesAsync();
                     await channel.SendMessageAsync($"{@event.Name} is now closed!");
                 }
@@ -245,10 +246,10 @@ namespace WolfpackBot
             await eventSignups.AddUserToEvent(@event, reaction.User.Value);
             await eventParticipantSets.UpdatePinnedMessageForEvent(channel, @event, message);
 
-           /* if (channel is SocketTextChannel textChannel)
-            {
-                await textChannel.Guild.Owner.SendMessageAsync($"{nickName} signed up to {@event.Name}");
-            }*/
+            /* if (channel is SocketTextChannel textChannel)
+             {
+                 await textChannel.Guild.Owner.SendMessageAsync($"{nickName} signed up to {@event.Name}");
+             }*/
 
             await NotifyUser(reaction, $"Thanks! You've been signed up to {@event.Name}. " +
                 $"If you can no longer attend just remove your reaction from the signup message!");
@@ -317,7 +318,7 @@ namespace WolfpackBot
             }
         }
 
-        private void InitServices(ServiceCollection services, string[] args)
+        private void ConfigureServices(ServiceCollection services, string[] args)
         {
             var builder = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
@@ -325,25 +326,29 @@ namespace WolfpackBot
                 .AddEnvironmentVariables("TTBot_")
                 .AddCommandLine(args);
 
-            services.AddSingleton(this._configuration = builder.Build());         
-
-            if (_configuration.GetValue<string>("CONSUMER_KEY").IsNullOrEmpty() ||
-                _configuration.GetValue<string>("CONSUMER_SECRET").IsNullOrEmpty() ||
-                _configuration.GetValue<string>("ACCESS_KEY").IsNullOrEmpty() ||
-                _configuration.GetValue<string>("ACCESS_SECRET").IsNullOrEmpty())
+            services.AddSingleton(this._configuration = builder.Build());
+            if (!_configuration.GetValue<bool>("DISABLE_TWITTER", false))
             {
-                throw new InvalidConfigException();
+                if (_configuration.GetValue<string>("CONSUMER_KEY").IsNullOrEmpty() ||
+                    _configuration.GetValue<string>("CONSUMER_SECRET").IsNullOrEmpty() ||
+                    _configuration.GetValue<string>("ACCESS_KEY").IsNullOrEmpty() ||
+                    _configuration.GetValue<string>("ACCESS_SECRET").IsNullOrEmpty())
+                {
+                    throw new InvalidConfigException();
+                }
             }
             var conString = GetConnString();
+            var efConString = _configuration.GetValue<string>("EF_CONNECTION_STRING");
             Console.WriteLine("Con: " + conString);
+            Console.Write("Ef Con: " + efConString);
             services.AddDbContext<WolfpackDbContext>(options =>
             {
-                options.UseSqlite(conString);
+                options.UseSqlite(efConString);
             });
             services.AddScoped<IModerator, Moderator>();
             services.AddScoped<ILeaderboards, Leaderboards>();
             services.AddScoped<ILeaderboardEntries, LeaderboardEntries>();
-       
+
             services.AddSingleton<IDbConnectionFactory>(new OrmLiteConnectionFactory(conString, SqliteDialect.Provider));
             services.AddScoped<IPermissionService, PermissionService>();
             services.AddScoped<IEvents, Events>();

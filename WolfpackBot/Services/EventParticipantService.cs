@@ -16,21 +16,18 @@ namespace WolfpackBot.Services
 {
     public class EventParticipantService : IEventParticipantService
     {
-        private readonly IEventSignups _eventSignups;
         private readonly IEvents _events;
         private readonly WolfpackDbContext _db;
 
-        public EventParticipantService(IEventSignups eventSignups, IEvents events, WolfpackDbContext db)
+        public EventParticipantService(IEvents events, WolfpackDbContext db)
         {
-            _eventSignups = eventSignups;
             _events = events;
             _db = db;
         }
 
         public async Task<IMessage> CreateAndPinParticipantMessage(ISocketMessageChannel channel, Event @event)
         {
-            var signups = await _eventSignups.GetAllSignupsForEvent(@event);
-            var embed = await GetParticipantsEmbed(channel, @event, signups);
+            var embed = await GetParticipantsEmbed(channel, @event);
             var message = await channel.SendMessageAsync(embed: embed);
             await message.PinAsync();
             @event.MessageId = message.Id.ToString();
@@ -38,9 +35,9 @@ namespace WolfpackBot.Services
             return message;
         }
 
-        public async Task<string> GetParticipantsMessageBody(ISocketMessageChannel channel, Event @event, List<EventSignup> signups, bool showJoinPrompt = true)
+        public async Task<string> GetParticipantsMessageBody(ISocketMessageChannel channel, Event @event, bool showJoinPrompt = true)
         {
-            var users = await Task.WhenAll(signups.Select(async sup => (await channel.GetUserAsync(Convert.ToUInt64(sup.UserId)) as SocketGuildUser)));
+            var users = await Task.WhenAll(@event.EventSignups.Select(async sup => (await channel.GetUserAsync(Convert.ToUInt64(sup.UserId)) as SocketGuildUser)));
 
             var usersInEvent = string.Join(Environment.NewLine, users.Select(u => u.GetDisplayName()));
             var message = $"**{@event.Name}**{Environment.NewLine}";
@@ -70,17 +67,19 @@ namespace WolfpackBot.Services
             return message;
         }
 
-        public async Task<Embed> GetParticipantsEmbed(ISocketMessageChannel channel, Event @event, List<EventSignup> signups, bool showJoinPrompt = true)
+        public async Task<Embed> GetParticipantsEmbed(ISocketMessageChannel channel, Event @event, bool showJoinPrompt = true)
         {
 
             var users = new List<SocketGuildUser>();
-            foreach (var signup in signups)
+            foreach (var signup in @event.EventSignups)
             {
                 var user = await channel.GetUserAsync(Convert.ToUInt64(signup.UserId)) as SocketGuildUser;
                 if (user == null)
                 {
+
                     //handle user that left the guild
-                    await _eventSignups.DeleteAsync(signup);
+                    @event.EventSignups.Remove(signup);
+                    _db.SaveChangesAsync();
                     continue;
                 }
                 users.Add(user);
@@ -119,7 +118,7 @@ namespace WolfpackBot.Services
 
         public async Task UpdatePinnedMessageForEvent(ISocketMessageChannel channel, Event @event, IUserMessage message)
         {
-            var messageEmbed = await GetParticipantsEmbed(channel, @event, await _eventSignups.GetAllSignupsForEvent(@event));
+            var messageEmbed = await GetParticipantsEmbed(channel, @event);
             await (message).ModifyAsync(prop => { prop.Embed = messageEmbed; prop.Content = null; });
         }
 
@@ -131,7 +130,7 @@ namespace WolfpackBot.Services
                 await CreateAndPinParticipantMessage(channel, @event);
                 return;
             }
-            var messageEmbed = await GetParticipantsEmbed(channel, @event, await _eventSignups.GetAllSignupsForEvent(@event));
+            var messageEmbed = await GetParticipantsEmbed(channel, @event);
             await ((IUserMessage)message).ModifyAsync(prop => prop.Embed = messageEmbed);
         }
 

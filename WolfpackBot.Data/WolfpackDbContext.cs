@@ -21,7 +21,8 @@ namespace WolfpackBot.Data
             modelBuilder
                 .Entity<Event>(opt =>
                 {
-                    opt.HasMany(e => e.EventSignups)
+                    opt.ToTable("Event")
+                       .HasMany(e => e.EventSignups)
                        .WithOne(e => e.@event);
                     opt.Navigation(opt => opt.EventSignups).AutoInclude();
                 });

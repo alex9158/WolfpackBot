@@ -348,7 +348,7 @@ namespace WolfpackBot.Commands
                             {
                                 try
                                 {
-                                    await channel.DeleteMessageAsync(e.StandingsMessageId);
+                                    await channel.DeleteMessageAsync(e.StandingsMessageId.Value);
                                 }
                                 catch { }
                             }
@@ -383,13 +383,13 @@ namespace WolfpackBot.Commands
         {
             var sb = new StringBuilder();
             var zone = NodaTime.TimeZones.TzdbDateTimeZoneSource.Default.ForId("Europe/London");
-            var nextDateNoda = Instant.FromDateTimeOffset(e.NextRoundDate);
+            var nextDateNoda = Instant.FromDateTimeOffset(e.NextRoundDate.Value);
             var nextDate = new ZonedDateTime(nextDateNoda, zone);
 
             var unixTimeWithOffset = nextDate.ToDateTimeOffset().ToUnixTimeSeconds();
 
             var description = e.NextRoundTrack != ""
-                ? $"{e.NextRoundTrack} @ {e.NextRoundDate.ToString("dd MMMM yyyy HH:mm")} (BST){Environment.NewLine}" +
+                ? $"{e.NextRoundTrack} @ {e.NextRoundDate.Value.ToString("dd MMMM yyyy HH:mm")} (BST){Environment.NewLine}" +
                 $"<t:{unixTimeWithOffset}> (local) <t:{unixTimeWithOffset}:R>"
                 : "Season completed. Stay tuned for news of further seasons!";
 
@@ -401,7 +401,7 @@ namespace WolfpackBot.Commands
             {
                 try
                 {
-                    await channel.DeleteMessageAsync(e.NextTrackMessageId);
+                    await channel.DeleteMessageAsync(e.NextTrackMessageId.Value);
                 }
                 catch { }
             }

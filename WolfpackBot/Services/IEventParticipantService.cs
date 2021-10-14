@@ -9,8 +9,8 @@ namespace WolfpackBot.Services
     public interface IEventParticipantService
     {
         Task<IMessage> CreateAndPinParticipantMessage(ISocketMessageChannel channel, Event @event);
-        Task<Embed> GetParticipantsEmbed(ISocketMessageChannel channel, Event @event, List<EventSignup> signups, bool showJoinPrompt = true);
-        Task<string> GetParticipantsMessageBody(ISocketMessageChannel channel, Event @event, List<EventSignup> signups, bool showJoinPrompt = true);
+        Task<Embed> GetParticipantsEmbed(ISocketMessageChannel channel, Event @event, bool showJoinPrompt = true);
+        Task<string> GetParticipantsMessageBody(ISocketMessageChannel channel, Event @event,  bool showJoinPrompt = true);
         Task UnpinEventMessage(ISocketMessageChannel channel, Event @event);
         Task UpdatePinnedMessageForEvent(ISocketMessageChannel channel, Event @event);
         Task UpdatePinnedMessageForEvent(ISocketMessageChannel channel, Event @event, IUserMessage message);

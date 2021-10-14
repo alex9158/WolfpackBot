@@ -24,17 +24,15 @@ namespace WolfpackBot.Commands
     {
         private readonly IEvents _events;
         private readonly IPermissionService _permissionService;
-        private readonly IEventSignups _eventSignups;
         private readonly IConfirmationChecks _confirmationChecks;
         private readonly IConfirmationCheckPrinter _confirmationCheckPrinter;
         private readonly IEventParticipantService _eventParticipantService;
         private readonly WolfpackDbContext _db;
 
-        public EventModule(IEvents events, IPermissionService permissionService, IEventSignups eventSignups, IConfirmationChecks confirmationChecks, IConfirmationCheckPrinter confirmationCheckPrinter, IEventParticipantService eventParticipantService, WolfpackDbContext db)
+        public EventModule(IEvents events, IPermissionService permissionService, IConfirmationChecks confirmationChecks, IConfirmationCheckPrinter confirmationCheckPrinter, IEventParticipantService eventParticipantService, WolfpackDbContext db)
         {
             _events = events;
             _permissionService = permissionService;
-            _eventSignups = eventSignups;
             _confirmationChecks = confirmationChecks;
             _confirmationCheckPrinter = confirmationCheckPrinter;
             _eventParticipantService = eventParticipantService;
@@ -72,7 +70,7 @@ namespace WolfpackBot.Commands
                 roleId = role.Id.ToString();
             }
             catch (Discord.Net.HttpException) { /* ignore forbidden exception */ }
-            
+
 
             var @event = new Event
             {
@@ -117,7 +115,7 @@ namespace WolfpackBot.Commands
             {
                 try
                 {
-                    await role.DeleteAsync(); 
+                    await role.DeleteAsync();
                 }
                 catch (Discord.Net.HttpException) { /* ignore forbidden exception */ }
             }
@@ -155,7 +153,7 @@ namespace WolfpackBot.Commands
                 await Context.Channel.SendMessageAsync($"Unable to find an active event with the name {eventName}");
                 return;
             }
-            if (await _eventSignups.GetSignupAsync(existingEvent, Context.Message.Author) != null)
+            if (existingEvent.EventSignups.Any(sign => sign.UserId == Context.Message.Author.Id.ToString()))
             {
                 await Context.Message.Author.SendMessageAsync($"You're already signed up to {eventName}");
                 return;
@@ -186,7 +184,11 @@ namespace WolfpackBot.Commands
             }
 
 
-            await _eventSignups.AddUserToEvent(existingEvent, Context.Message.Author as SocketGuildUser);
+            existingEvent.EventSignups.Add(new EventSignup()
+            {
+                UserId = Context.Message.Author.Id.ToString()
+            });
+            await _db.SaveChangesAsync();
             await Context.Guild.Owner.SendMessageAsync($"{nickName} signed up to {existingEvent.Name}");
             await Context.Message.Author.SendMessageAsync($"Thanks {Context.Message.Author.Mention}! You've been signed up to {existingEvent.Name}. You can check the pinned messages in the event's channel to see the list of participants.");
             await UpdateConfirmationCheckForEvent(existingEvent);
@@ -203,7 +205,7 @@ namespace WolfpackBot.Commands
                 await Context.Channel.SendMessageAsync($"Unable to find an active event with the name {eventName}");
                 return;
             }
-            var existingSignup = await _eventSignups.GetSignupAsync(existingEvent, Context.Message.Author);
+            var existingSignup = existingEvent.EventSignups.FirstOrDefault(sign => sign.UserId == Context.Message.Author.Id.ToString());
             if (existingSignup == null)
             {
                 await Context.Channel.SendMessageAsync($"You're not currently signed up to {eventName}");
@@ -229,11 +231,12 @@ namespace WolfpackBot.Commands
                 nickName = string.IsNullOrEmpty(guildUser.Nickname) ? nickName : guildUser.Nickname;
             }
 
-            await _eventSignups.DeleteAsync(existingSignup);
-            await Context.Guild.Owner.SendMessageAsync($"{nickName} signed out of {existingEvent.Name}");
-            await Context.Channel.SendMessageAsync($"Thanks { Context.Message.Author.Mention}! You're no longer signed up to {existingEvent.Name}.");
-            await UpdateConfirmationCheckForEvent(existingEvent);
-            await _eventParticipantService.UpdatePinnedMessageForEvent(Context.Channel, existingEvent);
+            existingEvent.EventSignups.Remove(existingSignup);
+            await _db.SaveChangesAsync();
+            await Task.WhenAll(Context.Guild.Owner.SendMessageAsync($"{nickName} signed out of {existingEvent.Name}"),
+                               Context.Channel.SendMessageAsync($"Thanks { Context.Message.Author.Mention}! You're no longer signed up to {existingEvent.Name}."),
+                               UpdateConfirmationCheckForEvent(existingEvent),
+                               _eventParticipantService.UpdatePinnedMessageForEvent(Context.Channel, existingEvent));
         }
 
         [Command("signups")]
@@ -247,8 +250,8 @@ namespace WolfpackBot.Commands
                 return;
             }
 
-            var signUps = await _eventSignups.GetAllSignupsForEvent(existingEvent);
-            var messageText = await _eventParticipantService.GetParticipantsMessageBody(Context.Channel, existingEvent, signUps, showJoinPrompt: false);
+
+            var messageText = await _eventParticipantService.GetParticipantsMessageBody(Context.Channel, existingEvent, showJoinPrompt: false);
             await Context.Channel.SendMessageAsync(messageText);
         }
 
@@ -270,7 +273,15 @@ namespace WolfpackBot.Commands
                 return;
             }
 
-            await Task.WhenAll(Context.Message.MentionedUsers.Select(async user => await _eventSignups.AddUserToEvent(existingEvent, user)));
+            foreach (var mentionedUser in Context.Message.MentionedUsers)
+            {
+                existingEvent.EventSignups.Add(new EventSignup()
+                {
+                    UserId = mentionedUser.Id.ToString()
+                });
+            }
+
+            await _db.SaveChangesAsync();
             await UpdateConfirmationCheckForEvent(existingEvent);
             await _eventParticipantService.UpdatePinnedMessageForEvent(Context.Channel, existingEvent);
         }
@@ -287,12 +298,13 @@ namespace WolfpackBot.Commands
 
             foreach (var user in Context.Message.MentionedUsers)
             {
-                var existingSignup = await _eventSignups.GetSignupAsync(existingEvent, user);
-                if (existingSignup != null)
+                var signup = existingEvent.EventSignups.FirstOrDefault(signup => signup.UserId == user.Id.ToString());
+                if(signup != null)
                 {
-                    await _eventSignups.DeleteAsync(existingSignup);
-                }
+                    existingEvent.EventSignups.Remove(signup);
+                }          
             }
+            await _db.SaveChangesAsync();
 
             await Context.Channel.SendMessageAsync($"Removed {string.Join(' ', Context.Message.MentionedUsers.Select(user => user.Username))} from {eventName}");
             await UpdateConfirmationCheckForEvent(existingEvent);
