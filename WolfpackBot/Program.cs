@@ -69,9 +69,9 @@ namespace WolfpackBot
 
         private async Task OnReactionRemove(Cacheable<IUserMessage, ulong> cacheableMessage, ISocketMessageChannel channel, SocketReaction reaction)
         {
-            var eventSignups = _serviceProvider.GetRequiredService<IEventSignups>();
             var events = _serviceProvider.GetRequiredService<IEvents>();
             var eventParticipantSets = _serviceProvider.GetRequiredService<IEventParticipantService>();
+            var db = _serviceProvider.GetRequiredService<WolfpackDbContext>();
             var message = await cacheableMessage.GetOrDownloadAsync();
 
             if (!reaction.User.IsSpecified)
@@ -86,7 +86,7 @@ namespace WolfpackBot
                 return;
             }
 
-            var existingSignup = await eventSignups.GetSignupAsync(@event, reaction.User.Value);
+            var existingSignup = @event.EventSignups.FirstOrDefault(sign => sign.UserId == reaction.UserId.ToString());
             if (existingSignup == null)
             {
                 return;
@@ -131,8 +131,8 @@ namespace WolfpackBot
                {
                    await textChannel.Guild.Owner.SendMessageAsync($"{nickName} signed out of {@event.Name}");
                }*/
-
-            await eventSignups.DeleteAsync(existingSignup);
+            @event.EventSignups.Remove(existingSignup);
+            await db.SaveChangesAsync();
             await eventParticipantSets.UpdatePinnedMessageForEvent(channel, @event, message);
             await NotifyUser(reaction, $"Thanks! You've been removed from {@event.Name}.");
         }
@@ -153,7 +153,6 @@ namespace WolfpackBot
 
         private async Task OnReactionAdd(Cacheable<IUserMessage, ulong> cacheableMessage, ISocketMessageChannel channel, SocketReaction reaction)
         {
-            var eventSignups = _serviceProvider.GetRequiredService<IEventSignups>();
             var events = _serviceProvider.GetRequiredService<IEvents>();
             var db = _serviceProvider.GetRequiredService<WolfpackDbContext>();
             var eventParticipantSets = _serviceProvider.GetRequiredService<IEventParticipantService>();
@@ -194,10 +193,11 @@ namespace WolfpackBot
 
                     await db.SaveChangesAsync();
                     await channel.SendMessageAsync($"{@event.Name} is now closed!");
+                    return;
                 }
             }
 
-            var existingSignup = await eventSignups.GetSignupAsync(@event, reaction.User.Value);
+            var existingSignup = @event.EventSignups.FirstOrDefault(sign => sign.UserId == reaction.User.Value.ToString());
 
             if (existingSignup != null)
             {
@@ -243,7 +243,11 @@ namespace WolfpackBot
                 nickName = string.IsNullOrEmpty(guildUser.Nickname) ? nickName : guildUser.Nickname;
             }
 
-            await eventSignups.AddUserToEvent(@event, reaction.User.Value);
+            @event.EventSignups.Add(new EventSignup
+            {
+                UserId = reaction.UserId.ToString()
+            });
+            await db.SaveChangesAsync();
             await eventParticipantSets.UpdatePinnedMessageForEvent(channel, @event, message);
 
             /* if (channel is SocketTextChannel textChannel)
@@ -352,7 +356,6 @@ namespace WolfpackBot
             services.AddSingleton<IDbConnectionFactory>(new OrmLiteConnectionFactory(conString, SqliteDialect.Provider));
             services.AddScoped<IPermissionService, PermissionService>();
             services.AddScoped<IEvents, Events>();
-            services.AddScoped<IEventSignups, EventSignups>();
             services.AddScoped<IConfirmationChecks, ConfirmationChecks>();
             services.AddScoped<IConfirmationCheckPrinter, ConfirmationCheckPrinter>();
             services.AddScoped<IEventParticipantService, EventParticipantService>();
