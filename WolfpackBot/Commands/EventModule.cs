@@ -24,17 +24,13 @@ namespace WolfpackBot.Commands
     {
         private readonly IEvents _events;
         private readonly IPermissionService _permissionService;
-        private readonly IConfirmationChecks _confirmationChecks;
-        private readonly IConfirmationCheckPrinter _confirmationCheckPrinter;
         private readonly IEventParticipantService _eventParticipantService;
         private readonly WolfpackDbContext _db;
 
-        public EventModule(IEvents events, IPermissionService permissionService, IConfirmationChecks confirmationChecks, IConfirmationCheckPrinter confirmationCheckPrinter, IEventParticipantService eventParticipantService, WolfpackDbContext db)
+        public EventModule(IEvents events, IPermissionService permissionService, IEventParticipantService eventParticipantService, WolfpackDbContext db)
         {
             _events = events;
             _permissionService = permissionService;
-            _confirmationChecks = confirmationChecks;
-            _confirmationCheckPrinter = confirmationCheckPrinter;
             _eventParticipantService = eventParticipantService;
             _db = db;
         }
@@ -191,7 +187,6 @@ namespace WolfpackBot.Commands
             await _db.SaveChangesAsync();
             await Context.Guild.Owner.SendMessageAsync($"{nickName} signed up to {existingEvent.Name}");
             await Context.Message.Author.SendMessageAsync($"Thanks {Context.Message.Author.Mention}! You've been signed up to {existingEvent.Name}. You can check the pinned messages in the event's channel to see the list of participants.");
-            await UpdateConfirmationCheckForEvent(existingEvent);
             await _eventParticipantService.UpdatePinnedMessageForEvent(Context.Channel, existingEvent);
         }
 
@@ -234,8 +229,7 @@ namespace WolfpackBot.Commands
             existingEvent.EventSignups.Remove(existingSignup);
             await _db.SaveChangesAsync();
             await Task.WhenAll(Context.Guild.Owner.SendMessageAsync($"{nickName} signed out of {existingEvent.Name}"),
-                               Context.Channel.SendMessageAsync($"Thanks { Context.Message.Author.Mention}! You're no longer signed up to {existingEvent.Name}."),
-                               UpdateConfirmationCheckForEvent(existingEvent),
+                               Context.Channel.SendMessageAsync($"Thanks { Context.Message.Author.Mention}! You're no longer signed up to {existingEvent.Name}."),                            
                                _eventParticipantService.UpdatePinnedMessageForEvent(Context.Channel, existingEvent));
         }
 
@@ -282,7 +276,6 @@ namespace WolfpackBot.Commands
             }
 
             await _db.SaveChangesAsync();
-            await UpdateConfirmationCheckForEvent(existingEvent);
             await _eventParticipantService.UpdatePinnedMessageForEvent(Context.Channel, existingEvent);
         }
 
@@ -307,7 +300,7 @@ namespace WolfpackBot.Commands
             await _db.SaveChangesAsync();
 
             await Context.Channel.SendMessageAsync($"Removed {string.Join(' ', Context.Message.MentionedUsers.Select(user => user.Username))} from {eventName}");
-            await UpdateConfirmationCheckForEvent(existingEvent);
+
             await _eventParticipantService.UpdatePinnedMessageForEvent(Context.Channel, existingEvent);
         }
 
@@ -318,43 +311,5 @@ namespace WolfpackBot.Commands
                 "For example `!event join ACC Championship`. To unsign from an event, use the `!event unsign` command with the name of the event. For example, `!event unsign ACC Championship`.");
         }
 
-        [Command("confirm")]
-        public async Task Confirm([Remainder] string eventName)
-        {
-            if (!await _permissionService.AuthorIsModerator(Context))
-            {
-                return;
-            }
-
-            var existingEvent = await _events.GetActiveEvent(eventName, Context.Guild.Id);
-            if (existingEvent == null)
-            {
-                await Context.Channel.SendMessageAsync($"Unable to find an active event with the name {eventName}");
-                return;
-            }
-
-            var message = await Context.Channel.SendMessageAsync("Starting Confirmation Check..");
-            await _confirmationChecks.SaveAsync(new ConfirmationCheck()
-            {
-                EventId = existingEvent.Id,
-                MessageId = message.Id.ToString()
-            });
-            await _confirmationCheckPrinter.WriteMessage(this.Context.Channel, message, existingEvent);
-        }
-
-        private async Task UpdateConfirmationCheckForEvent(Event @event)
-        {
-            var confirmationCheck = await _confirmationChecks.GetMostRecentConfirmationCheckForEventAsync(@event.Id);
-            if (confirmationCheck == null)
-            {
-                return;
-            }
-            var message = await Context.Channel.GetMessageAsync(Convert.ToUInt64(confirmationCheck.MessageId));
-            if (message == null)
-            {
-                return;
-            }
-            await _confirmationCheckPrinter.WriteMessage(Context.Channel, (IUserMessage)message, @event);
-        }
     }
 }

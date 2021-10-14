@@ -257,30 +257,11 @@ namespace WolfpackBot
 
             await NotifyUser(reaction, $"Thanks! You've been signed up to {@event.Name}. " +
                 $"If you can no longer attend just remove your reaction from the signup message!");
-        }
-
-        private async Task OnReactionChange(Cacheable<IUserMessage, ulong> cacheableMessage, ISocketMessageChannel channel, SocketReaction _)
-        {
-            var message = await cacheableMessage.GetOrDownloadAsync();
-            if (message.Author.Id != _client.CurrentUser.Id)
-                return;
-            var confirmationPrinter = _serviceProvider.GetRequiredService<IConfirmationCheckPrinter>();
-            var confirmationsDAL = _serviceProvider.GetRequiredService<IConfirmationChecks>();
-            var eventsDal = _serviceProvider.GetRequiredService<IEvents>();
-            var confirmationCheck = await confirmationsDAL.GetConfirmationCheckByMessageId(message.Id);
-            if (confirmationCheck == null)
-            {
-                return;
-            }
-
-            var @event = await eventsDal.GetActiveEvent(confirmationCheck.EventId);
-            await confirmationPrinter.WriteMessage(channel, message, @event);
-        }
+        }    
 
         private string GetDataDirectory()
         {
             return _configuration.GetValue<string>("Database", Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "TTBot"));
-
         }
 
         private void CreateDataDirectory()
@@ -310,7 +291,6 @@ namespace WolfpackBot
                 connection.CreateTableIfNotExists<LeaderboardModerator>();
                 connection.CreateTableIfNotExists<Event>();
                 connection.CreateTableIfNotExists<EventSignup>();
-                connection.CreateTableIfNotExists<ConfirmationCheck>();
                 connection.CreateTableIfNotExists<ChampionshipResultsModel>();
                 connection.CreateTableIfNotExists<EventAliasMappingModel>();
                 connection.CreateTableIfNotExists<ExcelSheetEventMappingModel>();
@@ -355,9 +335,7 @@ namespace WolfpackBot
 
             services.AddSingleton<IDbConnectionFactory>(new OrmLiteConnectionFactory(conString, SqliteDialect.Provider));
             services.AddScoped<IPermissionService, PermissionService>();
-            services.AddScoped<IEvents, Events>();
-            services.AddScoped<IConfirmationChecks, ConfirmationChecks>();
-            services.AddScoped<IConfirmationCheckPrinter, ConfirmationCheckPrinter>();
+            services.AddScoped<IEvents, Events>();   
             services.AddScoped<IEventParticipantService, EventParticipantService>();
             services.AddScoped<IChampionshipResults, ChampionshipResults>();
             services.AddScoped<IExcelService, ExcelService>();
