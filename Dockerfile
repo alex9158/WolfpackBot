@@ -14,8 +14,8 @@ RUN apt-get update \
     libgdiplus \
     fontconfig \
     && rm -rf /var/lib/apt/lists/*
-COPY ./TTBot/Assets/Fonts/* /usr/share/fonts/truetype
+COPY ./WolfpackBot/Assets/Fonts/* /usr/share/fonts/truetype
 RUN fc-cache -f -v
 COPY --from=build /publish/ /app/
 WORKDIR /app/
-ENTRYPOINT ["dotnet", "TTBot.dll"]
+ENTRYPOINT ["dotnet", "WolfpackBot.dll"]
