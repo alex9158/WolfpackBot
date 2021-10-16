@@ -2,8 +2,6 @@
 using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.Extensions.Primitives;
-using ServiceStack.Logging;
-using ServiceStack.Messaging;
 using System;
 using System.Collections.Generic;
 using System.Globalization;

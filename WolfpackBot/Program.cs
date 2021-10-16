@@ -8,15 +8,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using System.IO;
 using WolfpackBot.DataAccess;
-using Dapper;
-using WolfpackBot.DataAccess.Dapper;
 using WolfpackBot.Services;
 using Microsoft.Data.Sqlite;
-using ServiceStack.OrmLite;
-using ServiceStack.Data;
 using System.Collections.Generic;
-using ServiceStack.Model;
-using ServiceStack;
 using WolfpackBot.Exceptions;
 using WolfpackBot.Data;
 using WolfpackBot.Data.DataAccess;
@@ -50,9 +44,8 @@ namespace WolfpackBot
 
             ConfigureServices(services, args);
             CreateDataDirectory();
-            InitDapperTypeHandlers();
             _serviceProvider = services.BuildServiceProvider();
-            ScaffoldDatabase();
+
             await InitCommands();
 
             _client.MessageReceived += MessageReceived;
@@ -256,11 +249,11 @@ namespace WolfpackBot
 
             await NotifyUser(reaction, $"Thanks! You've been signed up to {@event.Name}. " +
                 $"If you can no longer attend just remove your reaction from the signup message!");
-        }    
+        }
 
         private string GetDataDirectory()
         {
-            return _configuration.GetValue<string>("Database", Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "TTBot"));
+            return _configuration.GetValue<string>("DATA_DIRECTORY", Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "TTBot"));
         }
 
         private void CreateDataDirectory()
@@ -272,34 +265,6 @@ namespace WolfpackBot
             }
         }
 
-        private string GetConnString() => $"{Path.Combine(GetDataDirectory(), "database.sqlite")}";
-
-        private void InitDapperTypeHandlers()
-        {
-            SqlMapper.RemoveTypeMap(typeof(TimeSpan));
-            SqlMapper.AddTypeHandler(typeof(TimeSpan), new TimeSpanHandler());
-        }
-
-        private void ScaffoldDatabase()
-        {
-            var dbConFactory = _serviceProvider.GetRequiredService<IDbConnectionFactory>();
-            using (var connection = dbConFactory.Open())
-            {
-                connection.CreateTableIfNotExists<Leaderboard>();
-                connection.CreateTableIfNotExists<LeaderboardEntry>();
-                connection.CreateTableIfNotExists<LeaderboardModerator>();
-                connection.CreateTableIfNotExists<Event>();
-                connection.CreateTableIfNotExists<EventSignup>();
-                connection.CreateTableIfNotExists<ChampionshipResultsModel>();
-                connection.CreateTableIfNotExists<EventAliasMappingModel>();
-                connection.CreateTableIfNotExists<ExcelSheetEventMappingModel>();
-                connection.Execute(@"CREATE VIEW IF NOT EXISTS EventsWithCount
-                                    AS
-                                    SELECT *, (select count(*) from EventSignup where EventId = event.Id) as ParticipantCount
-                                    FROM [Event]
-                                    ");
-            }
-        }
 
         private void ConfigureServices(ServiceCollection services, string[] args)
         {
@@ -312,29 +277,27 @@ namespace WolfpackBot
             services.AddSingleton(this._configuration = builder.Build());
             if (!_configuration.GetValue<bool>("DISABLE_TWITTER", false))
             {
-                if (_configuration.GetValue<string>("CONSUMER_KEY").IsNullOrEmpty() ||
-                    _configuration.GetValue<string>("CONSUMER_SECRET").IsNullOrEmpty() ||
-                    _configuration.GetValue<string>("ACCESS_KEY").IsNullOrEmpty() ||
-                    _configuration.GetValue<string>("ACCESS_SECRET").IsNullOrEmpty())
+                if (string.IsNullOrEmpty(_configuration.GetValue<string>("CONSUMER_KEY")) ||
+                    string.IsNullOrEmpty(_configuration.GetValue<string>("CONSUMER_SECRET")) ||
+                    string.IsNullOrEmpty(_configuration.GetValue<string>("ACCESS_KEY")) ||
+                   string.IsNullOrEmpty(_configuration.GetValue<string>("ACCESS_SECRET")))
                 {
                     throw new InvalidConfigException();
                 }
             }
-            var conString = GetConnString();
-            var efConString = _configuration.GetValue<string>("EF_CONNECTION_STRING");
-            Console.WriteLine("Con: " + conString);
-            Console.Write("Ef Con: " + efConString);
+            var connectionString = _configuration.GetValue<string>("CONNECTION_STRING");
+         
+            Console.Write("Ef Con: " + connectionString);
             services.AddDbContext<WolfpackDbContext>(options =>
             {
-                options.UseSqlite(efConString);
+                options.UseSqlite(connectionString);
             });
             services.AddScoped<IModerator, Moderator>();
             services.AddScoped<ILeaderboards, Leaderboards>();
             services.AddScoped<ILeaderboardEntries, LeaderboardEntries>();
 
-            services.AddSingleton<IDbConnectionFactory>(new OrmLiteConnectionFactory(conString, SqliteDialect.Provider));
             services.AddScoped<IPermissionService, PermissionService>();
-            services.AddScoped<IEvents, Events>();   
+            services.AddScoped<IEvents, Events>();
             services.AddScoped<IEventParticipantService, EventParticipantService>();
             services.AddScoped<IChampionshipResults, ChampionshipResults>();
             services.AddScoped<IExcelService, ExcelService>();
