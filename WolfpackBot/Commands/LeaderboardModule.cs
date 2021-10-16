@@ -174,30 +174,37 @@ namespace WolfpackBot.Commands
         [Command("standings")]
         public async Task Standings([Remainder] string parameters = null)
         {
-            var leaderboard = await _leaderboards.GetActiveLeaderboardForChannelAsync(Context.Guild.Id, Context.Channel.Id);
-            if (leaderboard == null)
+            try
             {
-                await Context.Channel.SendMessageAsync($"There aren't any leaderboards active for {Context.Channel.Name}");
-                return;
-            }
-            var standings = (await _leaderboards.GetStandingsAsync(leaderboard.Id)).ToList(); //handle identical times here
+                var leaderboard = await _leaderboards.GetActiveLeaderboardForChannelAsync(Context.Guild.Id, Context.Channel.Id);
+                if (leaderboard == null)
+                {
+                    await Context.Channel.SendMessageAsync($"There aren't any leaderboards active for {Context.Channel.Name}");
+                    return;
+                }
+                var standings = (await _leaderboards.GetStandingsAsync(leaderboard.Id)).ToList(); //handle identical times here
 
-            if (!standings.Any())
+                if (!standings.Any())
+                {
+                    await Context.Channel.SendMessageAsync($"No times posted yet!");
+                    return;
+                }
+
+                var image = StandingsExtension.BuildImage(Context, leaderboard, standings);
+
+                using MemoryStream memoryStream = new MemoryStream();
+
+                image.Save(memoryStream, System.Drawing.Imaging.ImageFormat.Jpeg);
+
+                memoryStream.Position = 0;
+
+                await Context.Channel.SendFileAsync
+                    (memoryStream, $"{leaderboard.Description}-standings-{DateTime.Now.ToString("yyyy-dd-M-HH-mm-ss")}.png");
+            }catch(Exception ex)
             {
-                await Context.Channel.SendMessageAsync($"No times posted yet!");
-                return;
+                Console.WriteLine(ex);
+                throw;
             }
-
-            var image = StandingsExtension.BuildImage(Context, leaderboard, standings);
-
-            using MemoryStream memoryStream = new MemoryStream();
-
-            image.Save(memoryStream, System.Drawing.Imaging.ImageFormat.Jpeg);
-
-            memoryStream.Position = 0;
-
-            await Context.Channel.SendFileAsync
-                (memoryStream, $"{leaderboard.Description}-standings-{DateTime.Now.ToString("yyyy-dd-M-HH-mm-ss")}.png");
         }
 
         [Command("invalidate", ignoreExtraArgs: true)]
