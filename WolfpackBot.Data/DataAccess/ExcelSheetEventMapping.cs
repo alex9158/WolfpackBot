@@ -18,7 +18,7 @@ namespace WolfpackBot.Data.DataAccess
             _db = db;
         }
 
-        public async Task AddAsync(ulong eventId, string sheet, bool isRoundsSheet = false)
+        public async Task AddAsync(int eventId, string sheet, bool isRoundsSheet = false)
         {
             _db.Add(new ExcelSheetEventMappingModel()
             {
