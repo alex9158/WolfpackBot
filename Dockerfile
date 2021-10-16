@@ -2,7 +2,7 @@ FROM mcr.microsoft.com/dotnet/sdk:3.1 as build
 WORKDIR /build/
 COPY ./nuget.config ./
 COPY ./WolfpackBot.sln ./
-COPY ./WolfpackBot/WolfpackBot.csproj ./TTBot/
+COPY ./WolfpackBot/WolfpackBot.csproj ./WolfpackBot/
 COPY ./WolfpackBot.Data/WolfpackBot.Data.csproj ./WolfpackBot.Data/
 RUN dotnet restore 
 COPY ./ ./
