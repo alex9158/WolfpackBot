@@ -588,7 +588,7 @@ namespace WolfpackBot.Commands
                     return;
                 }
 
-                await _excelSheetEventMapping.AddAsync((ulong)e.Id, worksheet, isRoundsSheet);
+                await _excelSheetEventMapping.AddAsync(e.Id, worksheet, isRoundsSheet);
                 sb.AppendLine($"Worksheet {worksheet} added for event {eventShortName}");
                 await ReplyAsync(sb.ToString());
                 return;
@@ -620,7 +620,7 @@ namespace WolfpackBot.Commands
             {
                 var allActiveWorksheets = await _excelSheetEventMapping.GetAllActiveWorksheetMappings();
                 var allActiveEvents = await _events.GetActiveEvents(guildId);
-                ulong eId = 0;
+                var eId = 0;
 
                 foreach (var item in allActiveWorksheets.Select((value, i) => (value, i)))
                 {
@@ -629,7 +629,7 @@ namespace WolfpackBot.Commands
 
                     // only list active events
                     if (allActiveEvents.Where<Event>
-                            (e => (ulong)e.Id == w.EventId).Select(e => e.ShortName).FirstOrDefault() == null)
+                            (e => e.Id == w.EventId).Select(e => e.ShortName).FirstOrDefault() == null)
                     {
                         continue;
                     }
@@ -643,7 +643,7 @@ namespace WolfpackBot.Commands
                         }
                         sb.Append("***");
                         sb.Append(allActiveEvents.Where<Event>
-                            (e => (ulong)e.Id == w.EventId).Select(e => e.Name).FirstOrDefault());
+                            (e => e.Id == w.EventId).Select(e => e.Name).FirstOrDefault());
                         sb.Append("***");
                         sb.Append(": ");
                     }

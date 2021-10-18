@@ -6,7 +6,7 @@ namespace WolfpackBot.DataAccess
 {
     public interface IExcelSheetEventMapping
     {
-        Task AddAsync(ulong eventId, string sheet, bool isRoundsSheet = false);
+        Task AddAsync(int eventId, string sheet, bool isRoundsSheet = false);
         Task RemoveAsync(int id);
         Task<string> GetEventShortnameFromSheetNameAsync(string sheet, bool isRoundsSheet = false);
         Task<Event> GetActiveEventFromWorksheetAsync(string sheet);
