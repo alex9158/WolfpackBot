@@ -87,12 +87,12 @@ namespace WolfpackBot.Commands
             {
                 await Context.Channel.SendMessageAsync($"There isn't an active leaderboard for ${Context.Channel.Name}");
             }
-
+            await Standings();
             leaderboard.Active = false;
             await _db.SaveChangesAsync();
             await Context.Channel.SendMessageAsync($"{leaderboard.Game} leaderboard is now closed");
 
-            await Standings();           
+             
         }
 
         [Command("submit")]
