@@ -20,13 +20,13 @@ namespace WolfpackBot.Commands
     {
         struct RaceFuel
         {
-            public int raceTimeS;
-            public int lapTimeMs;
-            public double fuelUsageL;
+            public int RaceTime;
+            public int LapTimeMs;
+            public double FuelUsage;
 
-            public int reserveLaps;
+            public int ReserveLaps;
 
-            public int raceLaps;
+            public int RaceLaps;
             public double fuelPerMinute;
 
             public double fuel;
@@ -40,46 +40,42 @@ namespace WolfpackBot.Commands
             /// <param name="bot">optional for Author header</param>
             /// <param name="user">optional for Footer text</param>
             /// <returns></returns>
-            public Embed toEmbed(SocketSelfUser bot = null,  SocketUser user = null)
+            public Embed ToEmbed(SocketSelfUser bot = null,  SocketUser user = null)
             {
                 /* this cannot be used in anonymous expressions */
                 RaceFuel data = this;
-
 
                 var builder = new EmbedBuilder()
                 {
                     Color = Color.Blue,
                     Title = "Fuel Calculation",
-                };
-                
-
+                };      
 
                 builder.AddField(x =>
                 {
                     x.Name = "Racetime";
-                    x.Value = TimeSpan.FromSeconds(data.raceTimeS).ToString(@"hh\:mm");
+                    x.Value = TimeSpan.FromSeconds(data.RaceTime).ToString(@"hh\:mm");
                     x.IsInline = true;
                 });
 
                 builder.AddField(x =>
                 {
                     x.Name = "Laptime";
-                    x.Value = TimeSpan.FromMilliseconds(data.lapTimeMs).ToString(@"mm\:ss\.fff");
+                    x.Value = TimeSpan.FromMilliseconds(data.LapTimeMs).ToString(@"mm\:ss\.fff");
                     x.IsInline = true;
                 });
-
 
                 builder.AddField(x =>
                 {
                     x.Name = "Fuel per Lap";
-                    x.Value = data.fuelUsageL;
+                    x.Value = data.FuelUsage;
                     x.IsInline = true;
                 });
 
                 builder.AddField(x =>
                 {
                     x.Name = "Racelaps";
-                    x.Value = data.raceLaps;
+                    x.Value = data.RaceLaps;
                     x.IsInline = true;
                 });
 
@@ -97,18 +93,13 @@ namespace WolfpackBot.Commands
                     x.IsInline = false;
                 });
 
-
-                double reserve_laps_perc = data.reserveLaps / (double)data.raceLaps * 100;
+                double reserve_laps_perc = data.ReserveLaps / (double)data.RaceLaps * 100;
                 builder.AddField(x =>
                 {
-                    x.Name = $"Safe Fuel (+{data.reserveLaps} laps / +{(int)reserve_laps_perc}%)";
+                    x.Name = $"Safe Fuel (+{data.ReserveLaps} laps / +{(int)reserve_laps_perc}%)";
                     x.Value = data.fuelSave.ToString("0.00") + "l";
                     x.IsInline = false;
                 });
-
-
-                
-
 
                 if (bot != null)
                 {
@@ -118,7 +109,6 @@ namespace WolfpackBot.Commands
                         a.IconUrl = $"https://cdn.discordapp.com/avatars/{bot.Id}/{bot.AvatarId}.png";
                     });
                 }
-
 
                 if (user is SocketGuildUser gUser)
                 {
@@ -135,15 +125,6 @@ namespace WolfpackBot.Commands
             }
 
         };
-
-
-
-        public FuelModule()
-        {
-            
-        }
-
-
 
         /// <summary>
         /// Convert a string to TimeSpan
@@ -252,10 +233,10 @@ namespace WolfpackBot.Commands
         private RaceFuel GetFuelUsage(RaceFuel data)
         {
 
-            data.fuelPerMinute = data.fuelUsageL * 1000 / data.lapTimeMs * 60;
+            data.fuelPerMinute = data.FuelUsage * 1000 / data.LapTimeMs * 60;
 
-            data.fuel = data.raceLaps * data.fuelUsageL;
-            data.fuelSave = data.fuel + (data.reserveLaps * data.fuelUsageL);
+            data.fuel = data.RaceLaps * data.FuelUsage;
+            data.fuelSave = data.fuel + (data.ReserveLaps * data.FuelUsage);
 
             return data;
         }
@@ -265,54 +246,47 @@ namespace WolfpackBot.Commands
         [Command("")]
         [Alias("time")]
         [Summary("Calculate fuel usage by time")]
-        public async Task FuelTime(string race_len, string lap_time, string fuel_usage, int reserve_laps = 3)
+        public async Task FuelTime(string raceLength, string lapTime, string fuelUsage, int reserveLaps = 3)
         {
 
             RaceFuel data = new RaceFuel
             {
-                raceTimeS = (int)ParseRaceLen(race_len).TotalSeconds,
-                lapTimeMs = (int)ParseLaptime(lap_time).TotalMilliseconds,
-                fuelUsageL = double.Parse(fuel_usage, CultureInfo.InvariantCulture),
-                reserveLaps = reserve_laps
+                RaceTime = (int)ParseRaceLen(raceLength).TotalSeconds,
+                LapTimeMs = (int)ParseLaptime(lapTime).TotalMilliseconds,
+                FuelUsage = double.Parse(fuelUsage, CultureInfo.InvariantCulture),
+                ReserveLaps = reserveLaps
             };
 
 
             /* calculating race laps here, as called function is generic and requires this value */
 
-            double race_laps_d = data.raceTimeS * 1000 / (double)data.lapTimeMs;
-            data.raceLaps = (int)Math.Ceiling(race_laps_d);
-
-
-
+            double raceLaps = data.RaceTime * 1000 / (double)data.LapTimeMs;
+            data.RaceLaps = (int)Math.Ceiling(raceLaps);
             data = GetFuelUsage(data);
-            await Context.Channel.SendMessageAsync(embed: data.toEmbed(Context.Client.CurrentUser, Context.User));
-            
+
+            await Context.Channel.SendMessageAsync(embed: data.ToEmbed(Context.Client.CurrentUser, Context.User));            
         }
 
         
         [Command("laps")]
         [Summary("Calculate fuel usage by laps")]
-        public async Task FuelLaps(int race_laps, string lap_time, string fuel_usage, int reserve_laps = 3)
+        public async Task FuelLaps(int raceLaps, string lapTime, string fuelUsage, int reserveLaps = 3)
         {
             RaceFuel data = new RaceFuel
             {
-                raceLaps = race_laps,
-                lapTimeMs = (int)ParseLaptime(lap_time).TotalMilliseconds,
-                fuelUsageL = double.Parse(fuel_usage, CultureInfo.InvariantCulture),
-                reserveLaps = reserve_laps
+                RaceLaps = raceLaps,
+                LapTimeMs = (int)ParseLaptime(lapTime).TotalMilliseconds,
+                FuelUsage = double.Parse(fuelUsage, CultureInfo.InvariantCulture),
+                ReserveLaps = reserveLaps
             };
-
-
             /* calculating race time here, as called function is generic and requires this value */
 
-            data.raceTimeS = data.raceLaps * data.lapTimeMs / 1000;
+            data.RaceTime = data.RaceLaps * data.LapTimeMs / 1000;
 
 
             data = GetFuelUsage(data);
-            await Context.Channel.SendMessageAsync(embed: data.toEmbed(Context.Client.CurrentUser, Context.User));
+            await Context.Channel.SendMessageAsync(embed: data.ToEmbed(Context.Client.CurrentUser, Context.User));
         }
-
-
 
         [Command("help")]
         public async Task Help()
