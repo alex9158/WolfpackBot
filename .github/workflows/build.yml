@@ -33,16 +33,4 @@ jobs:
         with:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-      -
-        name: Install SSH Key
-        uses: shimataro/ssh-key-action@v2
-        with:
-          known_hosts: ${{ secrets.AZURE_SSH_KNOWN_HOSTS }}
-          key: ${{ secrets.AZURE_SSH_PRIVATE_KEY }}
-          name: id_rsa
-          if_key_exists: replace        
-      -
-        name: Deploy Image
-        run: ssh alex@52.151.89.75 'sudo docker pull alex9158/ttbot:latest && sudo docker stop ttbot && sudo docker rm ttbot && sudo docker run -v=/data/ttbot:/data/ttbot --name=ttbot --env-file /data/ttbot/.env -itd alex9158/ttbot:latest'
-      
+          labels: ${{ steps.meta.outputs.labels }} 
