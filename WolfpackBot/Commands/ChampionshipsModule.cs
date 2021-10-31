@@ -385,10 +385,13 @@ namespace WolfpackBot.Commands
             var nextDateNoda = Instant.FromDateTimeOffset(e.NextRoundDate.Value);
             var nextDate = new ZonedDateTime(nextDateNoda, zone);
 
+            var daylight = nextDateNoda.InZone(zone).IsDaylightSavingTime();
+            var UKtimezone = daylight ? "BST" : "GMT";
+
             var unixTimeWithOffset = nextDate.ToDateTimeOffset().ToUnixTimeSeconds();
 
             var description = e.NextRoundTrack != ""
-                ? $"{e.NextRoundTrack} @ {e.NextRoundDate.Value.ToString("dd MMMM yyyy HH:mm")} (BST){Environment.NewLine}" +
+                ? $"{e.NextRoundTrack} @ {e.NextRoundDate.Value.ToString("dd MMMM yyyy HH:mm")} {UKtimezone}{Environment.NewLine}" +
                 $"<t:{unixTimeWithOffset}> (local) <t:{unixTimeWithOffset}:R>"
                 : "Season completed. Stay tuned for news of further seasons!";
 
