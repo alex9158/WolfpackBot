@@ -340,7 +340,15 @@ namespace WolfpackBot
         }
         private static Task Log(LogMessage msg)
         {
-            Console.WriteLine(msg.ToString());
+            if(msg.Exception != null)
+            {
+                Console.Write($"Exception executing command {msg.Message} {msg.Exception}");
+            }
+            else
+            {
+                Console.WriteLine(msg.Message);
+            }
+    
             return Task.CompletedTask;
         }
     }
