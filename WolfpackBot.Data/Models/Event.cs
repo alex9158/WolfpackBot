@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
 using System.Text;
 
 namespace WolfpackBot.Data.Models
@@ -24,7 +25,7 @@ namespace WolfpackBot.Data.Models
         public int? Round { get; set; }
         public string LastRoundDate { get; set; }
         public string LastRoundTrack { get; set; }
-        public ulong? StandingsMessageId { get; set; }
+        public string[] StandingsMessageIds { get; set; }
         public DateTime? NextRoundDate { get; set; }
         public string NextRoundTrack { get; set; }
         public ulong? NextTrackMessageId { get; set; }

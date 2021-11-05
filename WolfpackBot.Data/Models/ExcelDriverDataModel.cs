@@ -13,5 +13,6 @@ namespace WolfpackBot.Data.Models
         public string Car { get; set; }
         public string Points { get; set; }
         public string Diff { get; set; }
+        public int ExcelSheetEventMappingId { get; set; }
     }
 }

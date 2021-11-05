@@ -19,7 +19,7 @@ namespace WolfpackBot.Utilities
 {
     public static class StandingsExtension
     {
-        public static Bitmap BuildImage(Event e, List<ChampionshipResultsModel> results)
+        public static Bitmap BuildImage(Event e, List<ChampionshipResultsModel> results, string championshipName)
         {
             var orderedResults = results.OrderBy(r => r.Pos);
 
@@ -75,8 +75,8 @@ namespace WolfpackBot.Utilities
 
                 Size championshipSize = new Size(championshipXMax, championshipYMax);
                 graphics.DrawString(
-                    e.Name,
-                    graphics.GetAdjustedFont(e.Name, largerFont, championshipSize),
+                    championshipName,
+                    graphics.GetAdjustedFont(championshipName, largerFont, championshipSize),
                     new SolidBrush(System.Drawing.Color.FromArgb(213, 213, 213)),
                     championshipX,
                     championshipY);
@@ -171,7 +171,7 @@ namespace WolfpackBot.Utilities
                 }
                 else
                 {
-                    imageToReturn = image;
+                    imageToReturn = (Bitmap)image.Clone();
                 }
             }
 

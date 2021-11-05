@@ -71,6 +71,10 @@ namespace WolfpackBot.Data.DataAccess
             return (await _db.ExcelSheetEventMapping.FirstAsync(em => em.Sheetname == worksheet && !em.Event.Closed)).Id;
         }
 
+        public async Task<string> GetWorksheetNameFromIdAsync(int id)
+        {
+            return (await _db.ExcelSheetEventMapping.FirstAsync(em => em.Id == id && !em.Event.Closed)).Sheetname;
+        }
 
         public async Task<List<ExcelSheetEventMappingModel>> GetAllActiveWorksheetMappings()
         {
