@@ -34,7 +34,7 @@ namespace WolfpackBot.Data
                        .WithOne(e => e.@event);
                     opt.Property(e => e.StandingsMessageIds)
                         .HasConversion(
-                            v => v != null ? string.Join(',', v) : null,
+                            v => v != null && v.Length > 0 ? string.Join(',', v) : null,
                             v => v != null ? v.Split(',', StringSplitOptions.RemoveEmptyEntries) : new string[0]);
                     opt.Navigation(opt => opt.EventSignups).AutoInclude();
                 });
