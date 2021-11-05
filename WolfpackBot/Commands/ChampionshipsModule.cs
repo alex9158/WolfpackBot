@@ -338,14 +338,14 @@ namespace WolfpackBot.Commands
                         await ReplyAsync(sb.ToString());
                         return;
                     }
-                    if (e.StandingsMessageUlongs?.Length > 0)
+                    if (e.StandingsMessageIds.Length > 0)
                     {
-                        foreach (var messageId in e.StandingsMessageUlongs)
+                        foreach (var messageId in e.StandingsMessageIds)
                         {
                             try
                             {
-                                e.StandingsMessageUlongs = e.StandingsMessageUlongs.Where(id => id != messageId).ToArray();
-                                await channel.DeleteMessageAsync(messageId);
+                                e.StandingsMessageIds = e.StandingsMessageIds.Where(id => id != messageId).ToArray();
+                                await channel.DeleteMessageAsync(ulong.Parse(messageId));
                             }
                             catch
                             {
@@ -373,7 +373,7 @@ namespace WolfpackBot.Commands
                                     (memoryStream, $"{e.Name}-standings-{DateTime.Now.ToString("yyyy-dd-M-HH-mm-ss")}.png");
 
 
-                                e.StandingsMessageUlongs = e.StandingsMessageUlongs.Concat(new ulong[] { standingsMessage.Id }).ToArray();
+                                e.StandingsMessageIds = e.StandingsMessageIds.Concat(new string[] { standingsMessage.Id.ToString() }).ToArray();
                                 await PostNextRoundAsync(e, channel);
                                 await _db.SaveChangesAsync();
                             }

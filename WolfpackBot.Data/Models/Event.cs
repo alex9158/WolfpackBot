@@ -25,23 +25,7 @@ namespace WolfpackBot.Data.Models
         public int? Round { get; set; }
         public string LastRoundDate { get; set; }
         public string LastRoundTrack { get; set; }
-        public string StandingsMessageIds { get; set; }
-        [NotMapped]
-        public ulong[] StandingsMessageUlongs
-        {
-            get
-            {
-                var x =  StandingsMessageIds != null && StandingsMessageIds != ""
-                    ? Array.ConvertAll(StandingsMessageIds.Split(';'), ulong.Parse)
-                    : new ulong[0];
-                return x;
-            }
-            set
-            {
-                var _data = value;
-                StandingsMessageIds = String.Join(";", _data.Select(p => p.ToString()).ToArray());
-            }
-        }
+        public string[] StandingsMessageIds { get; set; }
         public DateTime? NextRoundDate { get; set; }
         public string NextRoundTrack { get; set; }
         public ulong? NextTrackMessageId { get; set; }

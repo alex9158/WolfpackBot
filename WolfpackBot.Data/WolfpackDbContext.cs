@@ -32,6 +32,10 @@ namespace WolfpackBot.Data
                     opt.ToTable("Event")
                        .HasMany(e => e.EventSignups)
                        .WithOne(e => e.@event);
+                    opt.Property(e => e.StandingsMessageIds)
+                        .HasConversion(
+                            v => string.Join(',', v),
+                            v => v.Split(',', StringSplitOptions.RemoveEmptyEntries));
                     opt.Navigation(opt => opt.EventSignups).AutoInclude();
                 });
 
