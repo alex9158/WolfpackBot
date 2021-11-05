@@ -12,6 +12,7 @@ namespace WolfpackBot.DataAccess
         Task<Event> GetActiveEventFromWorksheetAsync(string sheet);
         Task<bool> ActiveEventExistsAsync(string worksheet);
         Task<int> GetWorksheetMappingIdAsync(string worksheet);
+        Task<string> GetWorksheetNameFromIdAsync(int id);
         Task<List<ExcelSheetEventMappingModel>> GetAllActiveWorksheetMappings();
     }
 }

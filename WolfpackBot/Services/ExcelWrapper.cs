@@ -125,6 +125,8 @@ namespace WolfpackBot.Services
                         continue;
                     }
 
+                    var worksheetMappingId = await _excelSheetEventMapping.GetWorksheetMappingIdAsync(worksheet.Name);
+
                     int rowCount = worksheet.Dimension.End.Row;
                     int colCount = worksheet.Dimension.End.Column;
 
@@ -144,7 +146,8 @@ namespace WolfpackBot.Services
                             Number = worksheet.Cells[row, 4].Text,
                             Car = worksheet.Cells[row, 5].Text,
                             Points = worksheet.Cells[row, 6].Text,
-                            Diff = worksheet.Cells[row, 7].Text
+                            Diff = worksheet.Cells[row, 7].Text,
+                            ExcelSheetEventMappingId = worksheetMappingId,
                         };
 
                         excelDriverDataModels.Add(excelDriverDataModel);

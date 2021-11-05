@@ -29,7 +29,8 @@ namespace WolfpackBot.Data.DataAccess
                 Number = resultsModel.Number,
                 Car = resultsModel.Car,
                 Points = resultsModel.Points,
-                Diff = resultsModel.Diff
+                Diff = resultsModel.Diff,
+                ExcelSheetEventMappingId = resultsModel.ExcelSheetEventMappingId
             }));
             await _db.SaveChangesAsync();
         }

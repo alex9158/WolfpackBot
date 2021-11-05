@@ -116,7 +116,8 @@ namespace WolfpackBot.Commands
                         Number = excelDriverDataModel.Number,
                         Car = excelDriverDataModel.Car,
                         Points = excelDriverDataModel.Points,
-                        Diff = excelDriverDataModel.Diff
+                        Diff = excelDriverDataModel.Diff,
+                        ExcelSheetEventMappingId = excelDriverDataModel.ExcelSheetEventMappingId
                     };
 
                     championshipResults.Add(championshipResult);
@@ -325,50 +326,66 @@ namespace WolfpackBot.Commands
                         return;
                     }
 
-                    var image = StandingsExtension.BuildImage(e, results);
+                    var excelMappingId = results.GroupBy(r => r.ExcelSheetEventMappingId)
+                        .Select(group => group.Key)
+                        .ToList();
 
-                    if (toDiscord)
+                    var signUpChannelId = Convert.ToUInt64(e.ChannelId);
+                    var channel = Context.Guild.GetChannel(signUpChannelId) as IMessageChannel;
+                    if (channel == null)
                     {
-                        using (MemoryStream memoryStream = new MemoryStream())
-                        {
-
-                            image.Save(memoryStream, System.Drawing.Imaging.ImageFormat.Png);
-
-                            var signUpChannelId = Convert.ToUInt64(e.ChannelId);
-                            var channel = Context.Guild.GetChannel(signUpChannelId) as IMessageChannel;
-                            if (channel == null)
-                            {
-                                sb.AppendLine($"No sign-up channel found for event {e.ShortName} to post standings to");
-                                await ReplyAsync(sb.ToString());
-                                return;
-                            }
-
-                            if (e.StandingsMessageId > 0)
-                            {
-                                try
-                                {
-                                    await channel.DeleteMessageAsync(e.StandingsMessageId.Value);
-                                }
-                                catch { }
-                            }
-
-                            memoryStream.Position = 0;
-
-                            var standingsMessage = await channel.SendFileAsync
-                                (memoryStream, $"{e.Name}-standings-{DateTime.Now.ToString("yyyy-dd-M-HH-mm-ss")}.png");
-
-                            e.StandingsMessageId = standingsMessage.Id;
-                            await PostNextRoundAsync(e, channel);
-                            await _db.SaveChangesAsync();
-                        }
-                    }
-                    else
-                    {
-                        await _twitterIntegrationService.PostImage(image, e.TwitterMessage); 
-                        sb.AppendLine($"Championship {e.Name} standings tweeted!");
+                        sb.AppendLine($"No sign-up channel found for event {e.ShortName} to post standings to");
                         await ReplyAsync(sb.ToString());
                         return;
-                    }    
+                    }
+                    if (e.StandingsMessageUlongs?.Length > 0)
+                    {
+                        foreach (var messageId in e.StandingsMessageUlongs)
+                        {
+                            try
+                            {
+                                e.StandingsMessageUlongs = e.StandingsMessageUlongs.Where(id => id != messageId).ToArray();
+                                await channel.DeleteMessageAsync(messageId);
+                            }
+                            catch
+                            {
+                            }
+                        }
+                    }
+
+                    foreach (var emId in excelMappingId)
+                    {
+                        var sheetName = await _excelSheetEventMapping.GetWorksheetNameFromIdAsync(emId);
+                        var image = StandingsExtension.BuildImage(
+                            e,
+                            results.Where(r => r.ExcelSheetEventMappingId == emId).ToList(),
+                            Regex.Replace(sheetName, "championship", "", RegexOptions.IgnoreCase));
+
+                        if (toDiscord)
+                        {
+                            using (MemoryStream memoryStream = new MemoryStream())
+                            {
+                                image.Save(memoryStream, System.Drawing.Imaging.ImageFormat.Png);
+
+                                memoryStream.Position = 0;
+
+                                var standingsMessage = await channel.SendFileAsync
+                                    (memoryStream, $"{e.Name}-standings-{DateTime.Now.ToString("yyyy-dd-M-HH-mm-ss")}.png");
+
+
+                                e.StandingsMessageUlongs = e.StandingsMessageUlongs.Concat(new ulong[] { standingsMessage.Id }).ToArray();
+                                await PostNextRoundAsync(e, channel);
+                                await _db.SaveChangesAsync();
+                            }
+                        }
+                        else
+                        {
+                            await _twitterIntegrationService.PostImage(image, e.TwitterMessage);
+                            sb.AppendLine($"Championship {e.Name} standings tweeted!");
+                            await ReplyAsync(sb.ToString());
+                            return;
+                        }
+                    }
                 }
             }
             catch (Exception ex)

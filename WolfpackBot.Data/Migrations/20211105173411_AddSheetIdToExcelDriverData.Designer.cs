@@ -2,15 +2,17 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using WolfpackBot.Data;
 
 namespace WolfpackBot.Data.Migrations
 {
     [DbContext(typeof(WolfpackDbContext))]
-    partial class WolfpackDbContextModelSnapshot : ModelSnapshot
+    [Migration("20211105173411_AddSheetIdToExcelDriverData")]
+    partial class AddSheetIdToExcelDriverData
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -37,6 +39,9 @@ namespace WolfpackBot.Data.Migrations
                     b.Property<int>("ExcelSheetEventMappingId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("ExcelSheetId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Number")
                         .HasColumnType("TEXT");
 
@@ -49,6 +54,8 @@ namespace WolfpackBot.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("EventId");
+
+                    b.HasIndex("ExcelSheetId");
 
                     b.ToTable("ChampionshipResults");
                 });
@@ -101,8 +108,8 @@ namespace WolfpackBot.Data.Migrations
                     b.Property<string>("ShortName")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("StandingsMessageIds")
-                        .HasColumnType("TEXT");
+                    b.Property<ulong?>("StandingsMessageId")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("TwitterMessage")
                         .HasColumnType("TEXT");
@@ -256,7 +263,13 @@ namespace WolfpackBot.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("WolfpackBot.Data.Models.ExcelSheetEventMappingModel", "ExcelSheet")
+                        .WithMany()
+                        .HasForeignKey("ExcelSheetId");
+
                     b.Navigation("Event");
+
+                    b.Navigation("ExcelSheet");
                 });
 
             modelBuilder.Entity("WolfpackBot.Data.Models.EventAliasMappingModel", b =>

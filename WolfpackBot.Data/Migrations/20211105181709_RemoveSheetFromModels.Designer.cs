@@ -2,15 +2,17 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using WolfpackBot.Data;
 
 namespace WolfpackBot.Data.Migrations
 {
     [DbContext(typeof(WolfpackDbContext))]
-    partial class WolfpackDbContextModelSnapshot : ModelSnapshot
+    [Migration("20211105181709_RemoveSheetFromModels")]
+    partial class RemoveSheetFromModels
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -101,8 +103,8 @@ namespace WolfpackBot.Data.Migrations
                     b.Property<string>("ShortName")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("StandingsMessageIds")
-                        .HasColumnType("TEXT");
+                    b.Property<ulong?>("StandingsMessageId")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("TwitterMessage")
                         .HasColumnType("TEXT");
