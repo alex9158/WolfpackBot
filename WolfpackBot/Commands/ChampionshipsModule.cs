@@ -373,7 +373,9 @@ namespace WolfpackBot.Commands
                                     (memoryStream, $"{e.Name}-standings-{DateTime.Now.ToString("yyyy-dd-M-HH-mm-ss")}.png");
 
 
-                                e.StandingsMessageIds = e.StandingsMessageIds.Concat(new string[] { standingsMessage.Id.ToString() }).ToArray();
+                                e.StandingsMessageIds = e.StandingsMessageIds != null
+                                    ? e.StandingsMessageIds.Concat(new string[] { standingsMessage.Id.ToString() }).ToArray()
+                                    : new string[] { standingsMessage.Id.ToString() };
                                 await PostNextRoundAsync(e, channel);
                                 await _db.SaveChangesAsync();
                             }
