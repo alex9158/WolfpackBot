@@ -78,7 +78,7 @@ namespace WolfpackBot.Data.DataAccess
 
         public async Task<List<ExcelSheetEventMappingModel>> GetAllActiveWorksheetMappings()
         {
-            return await _db.ExcelSheetEventMapping.OrderBy(em => em.EventId).ToListAsync();
+            return await _db.ExcelSheetEventMapping.Where(em => !em.Event.Closed).OrderBy(em => em.EventId).ToListAsync();
         }
     }
 }
