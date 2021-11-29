@@ -338,7 +338,7 @@ namespace WolfpackBot.Commands
                         await ReplyAsync(sb.ToString());
                         return;
                     }
-                    if (e.StandingsMessageIds?.Length > 0)
+                    if (e.StandingsMessageIds?.Length > 0 && toDiscord)
                     {
                         foreach (var messageId in e.StandingsMessageIds)
                         {
