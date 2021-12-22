@@ -330,8 +330,7 @@ namespace WolfpackBot.Commands
                         .Select(group => group.Key)
                         .ToList();
 
-                    var signUpChannelId = Convert.ToUInt64(e.ChannelId);
-                    var channel = Context.Guild.GetChannel(signUpChannelId) as IMessageChannel;
+                    var channel = Context.Guild.GetChannel(e.StandingsChannelId) as IMessageChannel;
                     if (channel == null)
                     {
                         sb.AppendLine($"No sign-up channel found for event {e.ShortName} to post standings to");
@@ -687,6 +686,88 @@ namespace WolfpackBot.Commands
             }
 
             await ReplyAsync(sb.ToString());
+        }
+
+        [Command("channel")]
+        [Alias("c")]
+        public async Task AddStandingsChannelForEvent(string eventShortName = null, SocketGuildChannel taggedChannel = null)
+        {
+            var author = Context.Message.Author as SocketGuildUser;
+            if (!await _permissionService.UserIsModeratorAsync(Context, author))
+            {
+                await Context.Channel.SendMessageAsync("You dont have permission to add standings channel for an event");
+                return;
+            }
+            var sb = new StringBuilder();
+
+            var guildId = Context.Guild.Id;
+
+            // if no params provided, list active channels
+            if (eventShortName == null && taggedChannel == null)
+            {
+                var events = await _events.GetActiveEvents(guildId);
+                var hasStandingsChannels = false;
+                foreach (var ev in events)
+                {
+                    {
+                        if (ev.StandingsChannelId > 0)
+                        {
+                            var sC = Context.Guild.GetChannel(ev.StandingsChannelId);
+                            sb.AppendLine($"{ev.ShortName}, standings channel: {sC.Name}");
+                            hasStandingsChannels = true;
+                        }
+                    }
+                }
+
+                if (!hasStandingsChannels)
+                {
+                    sb.AppendLine("No standings channels for active events");
+                }
+
+                await ReplyAsync(sb.ToString());
+                return;
+            }
+            // if there is no channel name then clear the event's current one
+            if (eventShortName != null && taggedChannel == null)
+            {
+                var e = await _events.GetActiveEvent(eventShortName, guildId);
+
+                if (e == null)
+                {
+                    sb.AppendLine($"No active event called {eventShortName}");
+                }
+                else if (e.StandingsChannelId == 0)
+                {
+                    sb.AppendLine($"No standings channels for event {eventShortName}");
+                }
+                else
+                {
+                    sb.AppendLine($"Removed standings channel for event {eventShortName}");
+                    e.StandingsChannelId = 0;
+                    await _db.SaveChangesAsync();
+                }
+
+                await ReplyAsync(sb.ToString());
+                return;
+            }
+            else
+            {
+                var e = await _events.GetActiveEvent(eventShortName, guildId);
+                if (e == null)
+                {
+                    sb.AppendLine($"Unknown event with shortname {eventShortName}");
+                    await ReplyAsync(sb.ToString());
+                    return;
+                }
+
+                e.StandingsChannelId = taggedChannel.Id;
+                await _db.SaveChangesAsync();
+                sb.AppendLine($"Standings channel {taggedChannel} added for event {eventShortName}");
+
+                await ReplyAsync(sb.ToString());
+                return;
+            }
+
         }
 
         [Command("help")]

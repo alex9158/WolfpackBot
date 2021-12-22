@@ -30,6 +30,7 @@ namespace WolfpackBot.Data.Models
         public string NextRoundTrack { get; set; }
         public ulong? NextTrackMessageId { get; set; }
         public string TwitterMessage { get; set; }
+        public UInt64 StandingsChannelId { get; set; }
 
         [NotMapped]
         public bool Full
