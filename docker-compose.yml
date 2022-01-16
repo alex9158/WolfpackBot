@@ -1,0 +1,16 @@
+services:
+  wolfpack-bot:
+    build: .
+    volumes:
+      - c:\Users\Gibbers81\Documents\TTBot:/data/ttbot
+    environment:
+      - TTBot_CONNECTION_STRING=${TTBot_CONNECTION_STRING}
+      - TTBot_TOKEN=${TTBot_TOKEN}
+      - TTBot_DATA_DIRECTORY=${TTBot_DATA_DIRECTORY}
+      - TTBot_DISABLE_TWITTER=${TTBot_DISABLE_TWITTER}
+  fileserver:
+    image: emazzotta/simple-fileserver-docker
+    volumes:
+      - c:\Users\Gibbers81\Documents\TTBot\Standings:/app
+    ports:
+      - 8000:8000

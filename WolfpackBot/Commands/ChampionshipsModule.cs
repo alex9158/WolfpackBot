@@ -1,6 +1,7 @@
 ﻿using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using Microsoft.Extensions.Configuration;
 using NodaTime;
 using System;
 using System.Collections.Generic;
@@ -32,6 +33,7 @@ namespace WolfpackBot.Commands
         private readonly IExcelSheetEventMapping _excelSheetEventMapping;
         private readonly ITwitterIntegrationService _twitterIntegrationService;
         private readonly WolfpackDbContext _db;
+        private readonly IConfiguration _config;
 
         public ChampionshipsModule(
             IChampionshipResults results,
@@ -41,7 +43,8 @@ namespace WolfpackBot.Commands
             IEventAliasMapping eventAliasMapping,
             IExcelSheetEventMapping excelSheetEventMapping,
             ITwitterIntegrationService twitterIntegrationService,
-            WolfpackDbContext db)
+            WolfpackDbContext db,
+            IConfiguration config)
         {
             _results = results ?? throw new ArgumentNullException(nameof(results));
             _permissionService = permissionService ?? throw new ArgumentNullException(nameof(permissionService));
@@ -51,6 +54,7 @@ namespace WolfpackBot.Commands
             _excelSheetEventMapping = excelSheetEventMapping ?? throw new ArgumentNullException(nameof(excelSheetEventMapping));
             _twitterIntegrationService = twitterIntegrationService ?? throw new ArgumentNullException(nameof(twitterIntegrationService));
             _db = db ?? throw new ArgumentNullException(nameof(db));
+            _config = config ?? throw new ArgumentNullException(nameof(config));
         }
     
 
@@ -371,12 +375,17 @@ namespace WolfpackBot.Commands
                                 var standingsMessage = await channel.SendFileAsync
                                     (memoryStream, $"{e.Name}-standings-{DateTime.Now.ToString("yyyy-dd-M-HH-mm-ss")}.png");
 
-
                                 e.StandingsMessageIds = e.StandingsMessageIds != null
                                     ? e.StandingsMessageIds.Concat(new string[] { standingsMessage.Id.ToString() }).ToArray()
                                     : new string[] { standingsMessage.Id.ToString() };
                                 await PostNextRoundAsync(e, channel);
                                 await _db.SaveChangesAsync();
+
+                                var transparentImage = StandingsExtension.SetImageOpacity(image, 0.80f);
+                                var dataDirectory = _config.GetValue<string>("DATA_DIRECTORY", Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "TTBot"));
+                                var filepath = $"{Path.Combine(dataDirectory, "Standings", $"{sheetName} Standings.png")}";
+
+                                transparentImage.Save(filepath);
                             }
                         }
                         else

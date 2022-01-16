@@ -275,7 +275,7 @@ namespace WolfpackBot
                 .AddCommandLine(args);
 
             services.AddSingleton(this._configuration = builder.Build());
-            if (!_configuration.GetValue<bool>("DISABLE_TWITTER", false))
+            if (!_configuration.GetValue<bool>("DISABLE_TWITTER"))
             {
                 if (string.IsNullOrEmpty(_configuration.GetValue<string>("CONSUMER_KEY")) ||
                     string.IsNullOrEmpty(_configuration.GetValue<string>("CONSUMER_SECRET")) ||
@@ -287,7 +287,7 @@ namespace WolfpackBot
             }
             var connectionString = _configuration.GetValue<string>("CONNECTION_STRING");
          
-            Console.Write("Ef Con: " + connectionString);
+            Console.WriteLine("Ef Con: " + connectionString);
             services.AddDbContext<WolfpackDbContext>(options =>
             {
                 options.UseSqlite(connectionString);
