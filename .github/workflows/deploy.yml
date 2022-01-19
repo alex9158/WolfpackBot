@@ -26,5 +26,5 @@ jobs:
           if_key_exists: replace        
       -
         name: Deploy Image
-        run: ssh alex@52.151.89.75 'cd /data/ttbot && rm -rf ./deployment && git clone https://github.com/alex9158/WolfpackBotDeployment.git ./deployment && cd ./deployment && docker-compose --env-file /data/ttbot/.env pull  && docker-compose --env-file /data/ttbot/.env up'
+        run: ssh alex@52.151.89.75 'cd /data/ttbot && rm -rf ./deployment && git clone https://github.com/alex9158/WolfpackBotDeployment.git ./deployment && cd ./deployment && sudo docker-compose --env-file /data/ttbot/.env pull  && sudo docker-compose --env-file /data/ttbot/.env up'
       
