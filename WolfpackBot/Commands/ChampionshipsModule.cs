@@ -415,11 +415,9 @@ namespace WolfpackBot.Commands
             var daylight = nextDateNoda.InZone(zone).IsDaylightSavingTime();
             var UKtimezone = daylight ? "BST" : "GMT";
 
-            var unixTimeWithOffset = nextDate.ToDateTimeOffset().ToUnixTimeSeconds();
-
             var description = e.NextRoundTrack != ""
                 ? $"{e.NextRoundTrack} @ {e.NextRoundDate.Value.ToString("dd MMMM yyyy HH:mm")} {UKtimezone}{Environment.NewLine}" +
-                $"<t:{unixTimeWithOffset}> (local) <t:{unixTimeWithOffset}:R>"
+                $"<t:{nextDate.ToDateTimeOffset().ToUnixTimeSeconds()}> (local) <t:{nextDate.ToDateTimeOffset().ToUnixTimeSeconds()}:R>"
                 : "Season completed. Stay tuned for news of further seasons!";
 
             var builder = new EmbedBuilder()
@@ -432,7 +430,11 @@ namespace WolfpackBot.Commands
                 {
                     await channel.DeleteMessageAsync(e.NextTrackMessageId.Value);
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    sb.AppendLine($"Error writing next round: {ex.Message}");
+                    await ReplyAsync(sb.ToString());
+                }
             }
 
             try
