@@ -194,7 +194,7 @@ namespace WolfpackBot.Commands
 
                 using MemoryStream memoryStream = new MemoryStream();
 
-                image.Save(memoryStream, System.Drawing.Imaging.ImageFormat.Jpeg);
+                image.Save(memoryStream, System.Drawing.Imaging.ImageFormat.Png);
 
                 memoryStream.Position = 0;
 
